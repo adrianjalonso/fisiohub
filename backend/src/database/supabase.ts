@@ -8,8 +8,5 @@ if (!supabaseUrl || !supabaseKey){
   throw new Error("Variaveis de ambiente do supabase não configuradas.")
 }
 
-console.log("URL:", supabaseUrl);
-console.log("KEY existe:", !!supabaseKey);
-
 
 export const supabase = createClient(supabaseUrl,supabaseKey);
