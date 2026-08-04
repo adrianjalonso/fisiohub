@@ -10,8 +10,8 @@ export default function Cadastro() {
 
   return(
     <>
-      <main className="flex justify-center items-center h-screen w-screen ">
-        <section className="flex flex-col justify-center items-center h-screen w-full lg:w-3/5 bg-primary-light" >
+      <main className="flex min-h-screen w-full">
+        <section className="flex flex-col items-center min-h-screen w-full py-10 lg:w-3/5 bg-primary-light" >
           <div className="w-full max-w-[480px] flex flex-col gap-8">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2 mb-2 text-primary">
@@ -28,7 +28,21 @@ export default function Cadastro() {
                   <span className="absolute flex items-center pl-3 pointer-events-none inset-x-0 inset-y-0">
                     <span className="material-symbols-outlined text-primary text-[20px]">person</span>
                   </span>
-                  <input className="w-full rounded-lg border border-primary. focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-grey/50 transition-all" placeholder="Ex: Dr. Roberto Silva" type="text" />
+                  <input className="w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-grey/50 transition-all" placeholder="Ex: Dr. Roberto Silva" type="text" />
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium ">Como você quer ser chamado?</label>
+                <div className="relative">
+                  <span className="absolute flex items-center pl-3 pointer-events-none inset-x-0 inset-y-0">
+                    <span className="material-symbols-outlined text-primary text-[20px]">pacemaker</span>
+                  </span>
+                  <select className="w-full h-12 pl-10 pr-10 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all appearance-none bg-white text-grey" name="" id="">
+                    <option value="">Selecione</option>
+                    <option value="">Dr.</option>
+                    <option value="">Dra.</option>
+                    <option value="">Nenhum</option>
+                  </select>
                 </div>
               </div>
               <div className="flex flex-col gap-2">
@@ -37,7 +51,7 @@ export default function Cadastro() {
                   <span className="absolute flex items-center pl-3 pointer-events-none inset-x-0 inset-y-0">
                     <span className="material-symbols-outlined text-primary text-[20px]">mail</span>
                   </span>
-                  <input className="w-full rounded-lg border border-primary. focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-grey/50 transition-all" placeholder="Ex: Dr. Roberto Silva" type="text" />
+                  <input className="w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-grey/50 transition-all" placeholder="Ex: Dr. Roberto Silva" type="text" />
                 </div>
               </div>
               <div className="flex flex-col gap-2">
@@ -46,7 +60,7 @@ export default function Cadastro() {
                   <span className="absolute flex items-center pl-3 pointer-events-none inset-x-0 inset-y-0">
                     <span className="material-symbols-outlined text-primary text-[20px]">badge</span>
                   </span>
-                  <input className="w-full rounded-lg border border-primary. focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-grey/50 transition-all" placeholder="Ex: 123456-F" type="text" />
+                  <input className="w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-grey/50 transition-all" placeholder="Ex: 123456-F" type="text" />
                 </div>
               </div>
               <div className="flex flex-row gap-3">
@@ -58,7 +72,7 @@ export default function Cadastro() {
                     <span className="absolute flex items-center pl-3 pointer-events-none inset-x-0 inset-y-0">
                       <span className="material-symbols-outlined text-primary text-[20px]">lock</span>
                     </span>
-                    <input className="w-full rounded-lg border border-primary. focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-primary/50 transition-all" placeholder="••••••••"  />
+                    <input className="w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-primary/50 transition-all" placeholder="••••••••"  />
                     <button  type="button" className="absolute inset-y-0 right-0 flex items-center pr-3 text-primary hover:text-black">
                       <span className="material-symbols-outlined text-primary text-[20px] hover:text-black"></span>
                     </button>
@@ -72,7 +86,7 @@ export default function Cadastro() {
                     <span className="absolute flex items-center pl-3 pointer-events-none inset-x-0 inset-y-0">
                       <span className="material-symbols-outlined text-primary text-[20px]">lock_reset</span>
                     </span>
-                    <input className="w-full rounded-lg border border-primary. focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-primary/50 transition-all" placeholder="••••••••"  />
+                    <input className="w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-primary/50 transition-all" placeholder="••••••••"  />
                     <button  type="button" className="absolute inset-y-0 right-0 flex items-center pr-3 text-primary hover:text-black">
                       <span className="material-symbols-outlined text-primary text-[20px] hover:text-black"></span>
                     </button>
@@ -99,8 +113,8 @@ export default function Cadastro() {
             <p  className="flex justify-center text-gray-500" >Já possui uma conta? <Link to="/cadastro" className="text-primary mx-2 hover:underline hover:cursor-pointer">Faça login</Link></p>
           </div>
         </section>
-        <section className=" hidden lg:flex flex-col relative justify-center items-center h-screen w-2/5 overflow-hidden">
-          <img className=" object-cover object-center absolute inset-0 w-full h-full bg-cover bg-center " src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIeJZZryymAKbtCjRZUiZng9G9Z2Uecwuyl5fNiqUHJTgDLf6tkbQbifHN7cmG8d0n0Ch60TTSilDFMvYnTftPcsI-BkByTKi6GJ8dZpgWk94j9FKShDk13sQomWfdXv73oAdLsBHw5BVn696BLwQ5rKIZPY-eLA-tlu_dv0pW5LVSAIsUNJ4TofpuCG1Wrvu3qtk8HEPnYgvBWQQI_d5g5SYM--IDhVGVKdMKMXPQq7hvsvcYOlXiLEMhWdGGM0wS-0TE0af781g" alt="Fisio" />
+        <section className=" hidden lg:flex flex-col justify-center items-center min-h-screen w-2/5 overflow-hidden sticky top-0">
+          <img className="object-cover object-center absolute inset-0 w-full h-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIeJZZryymAKbtCjRZUiZng9G9Z2Uecwuyl5fNiqUHJTgDLf6tkbQbifHN7cmG8d0n0Ch60TTSilDFMvYnTftPcsI-BkByTKi6GJ8dZpgWk94j9FKShDk13sQomWfdXv73oAdLsBHw5BVn696BLwQ5rKIZPY-eLA-tlu_dv0pW5LVSAIsUNJ4TofpuCG1Wrvu3qtk8HEPnYgvBWQQI_d5g5SYM--IDhVGVKdMKMXPQq7hvsvcYOlXiLEMhWdGGM0wS-0TE0af781g" alt="Fisio" />
           <div className=" absolute bottom-0 left-0 right-0 z-20 p-12 text-white">
             <div className="max-w-lg">
               <div className="inline-flex items-center justify-center p-2 bg-white/20 backdrop-blur-md rounded-lg mb-6 border border-white/10">
