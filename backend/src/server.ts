@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json())
 
 app.get("/", (req,res)=>{
-  res.send("API do FisioHub funcionando!")
+  res.send("API do FisioHub funcionandoo!")
 })
 
 app.use("/auth",router)
