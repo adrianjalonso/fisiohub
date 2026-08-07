@@ -224,7 +224,7 @@ export default function Registro ({IdUser}: {IdUser: number}) {
                 <span className="flex items-center justify-center size-8 rounded-full bg-green-50 text-primary">
                   <span className="material-symbols-outlined text-xl">medical_services</span>
                 </span>
-                <h3 className="text-lg font-bold">Contexto clínico</h3>
+                <h3 className="text-lg font-bold">Anamnese</h3>
               </div>
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-baseline">

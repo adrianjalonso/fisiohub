@@ -1,8 +1,8 @@
 import { supabase } from "../database/supabase.js";
 
- export async function registerService(name:string,email:string,password:string) {
+ export async function registerService(nome:string,email:string,password:string,titulo:string,crefito:string) {
 
-  if(!name||!email||!password){
+  if(!nome||!email||!password){
     throw new Error("Todos os campos são obrigatorios")
   }
 
@@ -18,9 +18,11 @@ import { supabase } from "../database/supabase.js";
   } 
 
   const {data:newUser,error:insertError} = await supabase.from("users").insert({
-    user_nome:name,
+    user_nome:nome,
     user_email:email,
-    senha:password
+    senha:password,
+    genero:titulo,
+    crefito:crefito
   })
   .select()
   .single()

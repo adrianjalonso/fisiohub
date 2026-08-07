@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
-import type { Agendamento } from "./types/types";
+import type { Agendamento } from "../types/types";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -11,10 +11,14 @@ const supabase = createClient(
 type DashboardProps = {
   titulo: string;
   sobrenome: string;
-  IdUser: number
+  IdUser: number;
 };
 
-export default function Dashboard({ titulo, sobrenome, IdUser }: DashboardProps) {
+export default function Dashboard({
+  titulo,
+  sobrenome,
+  IdUser,
+}: DashboardProps) {
   const hoje = new Date();
   const dia = hoje.getDate();
   const mesNum = hoje.getMonth();
@@ -38,21 +42,21 @@ export default function Dashboard({ titulo, sobrenome, IdUser }: DashboardProps)
   // Inicio da semana
   const inicioSemana = new Date(hoje);
   const primerDia = inicioSemana.getDay();
-  const diferenca = primerDia === 0 ? 6:primerDia-1;
-  inicioSemana.setDate(inicioSemana.getDate()-diferenca);
-  inicioSemana.setHours(0,0,0,0);
+  const diferenca = primerDia === 0 ? 6 : primerDia - 1;
+  inicioSemana.setDate(inicioSemana.getDate() - diferenca);
+  inicioSemana.setHours(0, 0, 0, 0);
 
   // Fim da semana
-  const fimSemana =new Date(inicioSemana);
-  fimSemana.setDate(fimSemana.getDate()+6);
-  fimSemana.setHours(23,59,59,999);
+  const fimSemana = new Date(inicioSemana);
+  fimSemana.setDate(fimSemana.getDate() + 6);
+  fimSemana.setHours(23, 59, 59, 999);
 
   //Semana passada
   const inicioSemanaPassada = new Date(inicioSemana);
-  inicioSemanaPassada.setDate(inicioSemanaPassada.getDate()-7)
+  inicioSemanaPassada.setDate(inicioSemanaPassada.getDate() - 7);
 
   const fimSemanaPassada = new Date(fimSemana);
-  fimSemanaPassada.setDate(fimSemanaPassada.getDate()-7)
+  fimSemanaPassada.setDate(fimSemanaPassada.getDate() - 7);
 
   const mes = meses[mesNum];
   let saudacao;
@@ -67,14 +71,11 @@ export default function Dashboard({ titulo, sobrenome, IdUser }: DashboardProps)
 
   const [atendimentosHoje, setAtendimentosHoje] = useState(0);
   const [agendamentosHoje, setAgendamentosHoje] = useState<Agendamento[]>([]);
-  const [comparacao, setComparacao] = useState("")
-  const [totalPacientes,setTotalPacientes] = useState(0)
-  const [ComparacaoPacientes, setComparacaoPacientes] = useState("")
-  
-  
+  const [comparacao, setComparacao] = useState("");
+  const [totalPacientes, setTotalPacientes] = useState(0);
+  const [ComparacaoPacientes, setComparacaoPacientes] = useState("");
 
   useEffect(() => {
-
     if (!IdUser) return;
 
     async function carregarDados() {
@@ -102,16 +103,15 @@ export default function Dashboard({ titulo, sobrenome, IdUser }: DashboardProps)
         .gte("data_hora", ontemInicio.toISOString())
         .lte("data_hora", ontemFim.toISOString());
 
-      const hoje = hojeCount||0;
+      const hoje = hojeCount || 0;
       const ontem = ontemCount || 0;
 
-
-      if(hoje>ontem){
-        setComparacao(`${hoje-ontem} a mais que ontem`)
-      } else if (hoje<ontem){
-        setComparacao(`${ontem-hoje} a menos que ontem`)
+      if (hoje > ontem) {
+        setComparacao(`${hoje - ontem} a mais que ontem`);
+      } else if (hoje < ontem) {
+        setComparacao(`${ontem - hoje} a menos que ontem`);
       } else {
-        setComparacao("Mesmo número de atendimentos que ontem ")
+        setComparacao("Mesmo número de atendimentos que ontem ");
       }
 
       const { data, error } = await supabase
@@ -121,29 +121,42 @@ export default function Dashboard({ titulo, sobrenome, IdUser }: DashboardProps)
         .lte("data_hora", fimHoje.toISOString())
         .order("data_hora", { ascending: true });
 
-        const {count: pacientesCount,error:pacientesError} = await supabase.from("pacientes").select("*",{count: "exact", head: true}).eq("id_user",IdUser);
+      const { count: pacientesCount, error: pacientesError } = await supabase
+        .from("pacientes")
+        .select("*", { count: "exact", head: true })
+        .eq("id_user", IdUser);
 
-        if (pacientesError){
-          console.error(pacientesError)
-          return
-        }
-        setTotalPacientes(pacientesCount||0)
+      if (pacientesError) {
+        console.error(pacientesError);
+        return;
+      }
+      setTotalPacientes(pacientesCount || 0);
 
-      const {count: estaSemana} = await supabase.from("pacientes").select("*",{count:"exact",head:true})
-      .gte("created_at",inicioSemana.toISOString()).lte("created_at",fimSemana.toISOString())
+      const { count: estaSemana } = await supabase
+        .from("pacientes")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", inicioSemana.toISOString())
+        .lte("created_at", fimSemana.toISOString());
 
-      const {count:semanaPassada} = await supabase.from("pacientes").select("*",{count: "exact",head: true})
-      .gte("created_at",inicioSemanaPassada.toISOString()).lte("created_at",fimSemanaPassada.toISOString())
+      const { count: semanaPassada } = await supabase
+        .from("pacientes")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", inicioSemanaPassada.toISOString())
+        .lte("created_at", fimSemanaPassada.toISOString());
 
-      const atual = estaSemana||0;
-      const anterior = semanaPassada||0
+      const atual = estaSemana || 0;
+      const anterior = semanaPassada || 0;
 
-      if (atual>anterior){
-        setComparacaoPacientes(`+${atual-anterior} novos esta semana`)
-      } else if (atual<anterior){
-        setComparacaoPacientes(`${anterior-atual} a menos que na semana passada`)
+      if (atual > anterior) {
+        setComparacaoPacientes(`+${atual - anterior} novos esta semana`);
+      } else if (atual < anterior) {
+        setComparacaoPacientes(
+          `${anterior - atual} a menos que na semana passada`,
+        );
       } else {
-        setComparacaoPacientes("Mesmo número de novos pacientes da semana passada")
+        setComparacaoPacientes(
+          "Mesmo número de novos pacientes da semana passada",
+        );
       }
 
       if (error) {
@@ -212,7 +225,7 @@ export default function Dashboard({ titulo, sobrenome, IdUser }: DashboardProps)
             ></img>
             <div className="flex flex-1 flex-col overflow-hidden">
               <p className="truncate text-sm font-bold text-black">
-                {saudacao} {titulo}  {sobrenome}
+                {saudacao} {titulo} {sobrenome}
               </p>
               <p className="truncate text-xs font-bold">Fisioterapeuta</p>
             </div>
