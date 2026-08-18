@@ -5,9 +5,14 @@ import { register } from "../services/auth.service";
 export default function Cadastro() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
-  const [crefito, setCrefito] = useState("");
   const [titulo, setTitulo] = useState("");
   const [password, setPassword] = useState("");
+  const [view,setView] = useState(false);
+  const [viewConfirm,setViewConfirm] = useState(false)
+
+  const itsVisivel = view ? "text" : "password"
+  const itsVisivelComfimr = viewConfirm ? "text" : "password"
+  const eye = view ? "visibility_off" : "visibility"
 
   async function cadastrar(e: SubmitEvent) {
     e.preventDefault();
@@ -18,7 +23,6 @@ export default function Cadastro() {
         email,
         password,
         titulo,
-        crefito,
       });
       console.log("Usuario criado:", usuario);
     } catch (error) {
@@ -109,25 +113,6 @@ export default function Cadastro() {
                   />
                 </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium ">
-                  Registro Profissional (CREFITO)
-                </label>
-                <div className="relative">
-                  <span className="absolute flex items-center pl-3 pointer-events-none inset-x-0 inset-y-0">
-                    <span className="material-symbols-outlined text-primary text-[20px]">
-                      badge
-                    </span>
-                  </span>
-                  <input
-                    value={crefito}
-                    onChange={(e) => setCrefito(e.target.value)}
-                    className="w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-grey/50 transition-all"
-                    placeholder="Ex: 123456-F"
-                    type="text"
-                  />
-                </div>
-              </div>
               <div className="flex flex-row gap-3">
                 <div className="flex flex-col gap-2 ">
                   <div className="flex justify-between items-center ">
@@ -142,14 +127,15 @@ export default function Cadastro() {
                     <input
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-primary/50 transition-all"
-                      placeholder="••••••••"
+                      className="w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-black transition-all"
+                      placeholder="••••••••" type={itsVisivel}
                     />
                     <button
+                    onClick={()=>setView(!view)}
                       type="button"
                       className="absolute inset-y-0 right-0 flex items-center pr-3 text-primary hover:text-black"
                     >
-                      <span className="material-symbols-outlined text-primary text-[20px] hover:text-black"></span>
+                      <span className="material-symbols-outlined text-primary text-[20px] hover:text-black">{eye}</span>
                     </button>
                   </div>
                 </div>
@@ -166,14 +152,15 @@ export default function Cadastro() {
                       </span>
                     </span>
                     <input
-                      className="w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-primary/50 transition-all"
-                      placeholder="••••••••"
+                      className="w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-black transition-all"
+                      placeholder="••••••••" type={itsVisivelComfimr}
                     />
                     <button
+                      onClick={()=>setViewConfirm(!viewConfirm)}
                       type="button"
                       className="absolute inset-y-0 right-0 flex items-center pr-3 text-primary hover:text-black"
                     >
-                      <span className="material-symbols-outlined text-primary text-[20px] hover:text-black"></span>
+                      <span className="material-symbols-outlined text-primary text-[20px] hover:text-black">{eye}</span>
                     </button>
                   </div>
                 </div>
