@@ -23,7 +23,8 @@ export default function Login({setTitulo,setSobrenome,setIdUser}: LoginProps) {
       setIdUser(data.user_id)
       localStorage.setItem("IdUser", data.user_id)
     } else {
-      console.log(error)
+      console.log("supabase error", error)
+      console.log("supabase data", data)
       setTitulo("dio error pa ")
     }
   }
