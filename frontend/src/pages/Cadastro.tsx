@@ -7,15 +7,23 @@ export default function Cadastro() {
   const [email, setEmail] = useState("");
   const [titulo, setTitulo] = useState("");
   const [password, setPassword] = useState("");
-  const [view,setView] = useState(false);
-  const [viewConfirm,setViewConfirm] = useState(false)
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [view, setView] = useState(false);
+  const [viewConfirm, setViewConfirm] = useState(false);
+  const [erro, setErro] = useState("");
 
-  const itsVisivel = view ? "text" : "password"
-  const itsVisivelComfimr = viewConfirm ? "text" : "password"
-  const eye = view ? "visibility_off" : "visibility"
+  const itsVisivel = view ? "text" : "password";
+  const itsVisivelComfimr = viewConfirm ? "text" : "password";
+  const eye = view ? "visibility_off" : "visibility";
+
 
   async function cadastrar(e: SubmitEvent) {
     e.preventDefault();
+
+    if (password !== passwordConfirm) {
+    setErro("As senhas não coincidem");
+    return;
+  }
 
     try {
       const usuario = await register({
@@ -113,57 +121,85 @@ export default function Cadastro() {
                   />
                 </div>
               </div>
-              <div className="flex flex-row gap-3">
-                <div className="flex flex-col gap-2 ">
-                  <div className="flex justify-between items-center ">
-                    <label className="text-sm font-medium ">Senha</label>
-                  </div>
-                  <div className="relative">
-                    <span className="absolute flex items-center pl-3 pointer-events-none inset-x-0 inset-y-0">
-                      <span className="material-symbols-outlined text-primary text-[20px]">
-                        lock
+              <div className="relative flex flex-col gap-1">
+                <div className="flex flex-row gap-3">
+                  <div className="flex flex-col gap-2 ">
+                    <div className="flex justify-between items-center ">
+                      <label className="text-sm font-medium ">Senha</label>
+                    </div>
+                    <div className="relative">
+                      <span className="absolute flex items-center pl-3 pointer-events-none inset-x-0 inset-y-0">
+                        <span className="material-symbols-outlined text-primary text-[20px]">
+                          lock
+                        </span>
                       </span>
-                    </span>
-                    <input
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-black transition-all"
-                      placeholder="••••••••" type={itsVisivel}
-                    />
-                    <button
-                    onClick={()=>setView(!view)}
-                      type="button"
-                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-primary hover:text-black"
-                    >
-                      <span className="material-symbols-outlined text-primary text-[20px] hover:text-black">{eye}</span>
-                    </button>
+                      <input
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-black transition-all"
+                        placeholder="••••••••"
+                        type={itsVisivel}
+                      />
+                      <button
+                        onClick={() => setView(!view)}
+                        type="button"
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-primary hover:text-black"
+                      >
+                        <span className="material-symbols-outlined text-primary text-[20px] hover:text-black">
+                          {eye}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2 ">
+                    <div className="flex justify-between items-center ">
+                      <label className="text-sm font-medium ">
+                        Confirmar Senha
+                      </label>
+                    </div>
+                    <div className="relative">
+                      <span className="absolute flex items-center pl-3 pointer-events-none inset-x-0 inset-y-0">
+                        <span className="material-symbols-outlined text-primary text-[20px]">
+                          lock_reset
+                        </span>
+                      </span>
+                      <input
+                      value={passwordConfirm}
+                        onChange={(e) => {
+                          const valor = e.target.value
+                          setPasswordConfirm(valor)
+                          if (valor.length>0&&valor!==password){
+                            setErro("As senhas não coincidem");
+                          } else {
+                            setErro("")
+                          }
+
+                        }}
+                        className="w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-black transition-all"
+                        placeholder="••••••••"
+                        type={itsVisivelComfimr}
+                      />
+                      <button
+                        onClick={() => setViewConfirm(!viewConfirm)}
+                        type="button"
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-primary hover:text-black"
+                      >
+                        <span className="material-symbols-outlined text-primary text-[20px] hover:text-black">
+                          {viewConfirm? "visibility_off":"visibility"}
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <div className="flex flex-col gap-2 ">
-                  <div className="flex justify-between items-center ">
-                    <label className="text-sm font-medium ">
-                      Confirmar Senha
-                    </label>
-                  </div>
-                  <div className="relative">
-                    <span className="absolute flex items-center pl-3 pointer-events-none inset-x-0 inset-y-0">
-                      <span className="material-symbols-outlined text-primary text-[20px]">
-                        lock_reset
-                      </span>
-                    </span>
-                    <input
-                      className="w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 pl-10 pr-4 placeholder:text-black transition-all"
-                      placeholder="••••••••" type={itsVisivelComfimr}
-                    />
-                    <button
-                      onClick={()=>setViewConfirm(!viewConfirm)}
-                      type="button"
-                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-primary hover:text-black"
-                    >
-                      <span className="material-symbols-outlined text-primary text-[20px] hover:text-black">{eye}</span>
-                    </button>
-                  </div>
-                </div>
+                {erro && (
+    <div className="absolute top-full right-0 mt-1 flex items-center gap-1 text-xs text-red-500">
+      <span className="material-symbols-outlined text-[16px]">
+        error
+      </span>
+
+      <span>{erro}</span>
+    </div>
+  )}
               </div>
               <div className="flex items-start gap-3 py-2">
                 <div className="flex items-center h-3">
