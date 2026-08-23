@@ -6,6 +6,9 @@ import Pacientes from "./pages/Pacientes";
 import Registro from "./pages/Registro";
 import FichaPaciente from "./pages/FichaPaciente";
 import Cadastro from "./pages/Cadastro";
+import { UserProvider } from "./context/UserContext";
+import Agenda from "./pages/Agenda";
+import Settings from "./pages/Settings";
 
 export default function App() {
   const [titulo, setTitulo] = useState("");
@@ -26,7 +29,8 @@ export default function App() {
   }, []);
 
   return (
-    <div className="h-screen w-screen">
+    <UserProvider titulo={titulo} sobrenome={sobrenome} IdUser={IdUser}>
+      <div className="h-screen w-screen">
       <Routes>
         <Route
           path="/"
@@ -52,13 +56,17 @@ export default function App() {
         <Route
           path="/dashboard"
           element={
-            <Dashboard titulo={titulo} sobrenome={sobrenome} IdUser={IdUser} />
+            <Dashboard />
           }
         />
         <Route path="/pacientes" element={<Pacientes />} />
         <Route path="/registro" element={<Registro IdUser={IdUser} />} />
         <Route path="/fichapaciente" element={<FichaPaciente />} />
+        <Route path="/agenda" element={<Agenda />} />
+        <Route path="/settings" element={<Settings />} />
       </Routes>
     </div>
+    </UserProvider>
+    
   );
 }

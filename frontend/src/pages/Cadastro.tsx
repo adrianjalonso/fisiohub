@@ -238,7 +238,7 @@ export default function Cadastro() {
             <p className="flex justify-center text-gray-500">
               Já possui uma conta?{" "}
               <Link
-                to="/cadastro"
+                to="/login"
                 className="text-primary mx-2 hover:underline hover:cursor-pointer"
               >
                 Faça login

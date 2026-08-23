@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
 import { createClient } from "@supabase/supabase-js"
 import {  useState } from "react"
+import Menu from "../components/Menu"
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL,import.meta.env.VITE_SUPABASE_ANON_KEY)
 
@@ -64,73 +65,7 @@ export default function Registro ({IdUser}: {IdUser: number}) {
 
   return (
     <div className="h-screen overflow-hidden flex flex-row">
-      <aside className="flex h-full w-72 flex-col justify-between border-r border-green-100 transition-colors duration-200">
-        <div className="flex flex-col gap-8 p-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-md">
-              <span className="material-symbols-outlined">
-                health_and_safety
-              </span>
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-xl font-bold -tracking-tight text-black">
-                FisioHub
-              </h1>
-              <p className=" text-xs font-medium">Portal do Fisioterapeuta</p>
-            </div>
-          </div>
-          <nav className="flex flex-col gap-2">
-            <Link
-              to="/dashboard"
-              className="flex items-center gap-3 rounded-lg hover:bg-primary-light/50 px-4 py-3 text-sm font-medium text-primary-dark transition-colors hover:bg-gray-300"
-            >
-              <span className="material-symbols-outlined">dashboard</span>
-              <p>Painel</p>
-            </Link>
-            <Link
-              to="/pacientes"
-              className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-primary-dark transition-colors  bg-primary/30"
-            >
-              <span className="material-symbols-outlined">group</span>
-              <p>Pacientes</p>
-            </Link>
-            <Link
-              to="/agenda"
-              className="flex items-center gap-3 rounded-lg hover:bg-primary-light/50 px-4 py-3 text-sm font-medium text-primary-dark transition-colors hover:bg-gray-300"
-            >
-              <span className="material-symbols-outlined">calendar_month</span>
-              <p>Agenda</p>
-            </Link>
-            <Link
-              to="/dashboard"
-              className="flex items-center gap-3 rounded-lg hover:bg-primary-light/50 px-4 py-3 text-sm font-medium text-primary-dark transition-colors hover:bg-gray-300"
-            >
-              <span className="material-symbols-outlined">settings</span>
-              <p>Configurações</p>
-            </Link>
-          </nav>
-        </div>
-        <div className="border-t border-green-100 p-6 ">
-          <div className="flex items-center gap-3">
-            <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-USvt2QK8j5DxxFW-cf6lesmeomLA1KXWNliUpmM5Uf7h32shIZSmgONkDg16vBZWMoc5_L-1MvNPbrjChE49PDu1UfEoW1y7Y9X22xmA7bd6vmufVZ4FnGdHFCtKw2ZqRoAkbT9CboU6R8xHLpkejoVqL29lRTOAvFVoSVgYcIpa2j2IpoaYq6Ms6QgQoIi1dzLUf6KsJBXlAtEy-m_Inhm3GzYMeay1VyN0CqdKwkxFjIj3FsO5zQwqH7D2jkpaWdaviMpD3dk"
-              className="h-10 w-10 rounded-full bg-cover bg-center ring-2 ring-white"
-            ></img>
-            <div className="flex flex-1 flex-col overflow-hidden">
-              <p className="truncate text-sm font-bold text-black">
-                Dra. Carolina Abdon
-              </p>
-              <p className="truncate text-xs font-bold">Fisioterapeuta</p>
-            </div>
-            <Link
-              to="/login"
-              className="text-gray-400 hover:text-red-500 transition-colors"
-            >
-              <span className="material-symbols-outlined">logout</span>
-            </Link>
-          </div>
-        </div>
-      </aside>
+      <Menu />
       <main className="flex-grow h-full flex flex-col overflow-scroll items-center py-8 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-[800px] flex flex-col gap-6">
           <nav className="flex items-center text-sm font-medium">
