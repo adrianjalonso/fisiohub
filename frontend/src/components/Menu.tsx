@@ -55,6 +55,15 @@ export default function Menu(){
               <p>Agenda</p>
             </NavLink>
             <NavLink
+              to="/evolucoes"
+              className={({isActive})=>
+              isActive ? estiloDestacado: estiloNormal
+              }
+            >
+              <span className="material-symbols-outlined">add_notes</span>
+              <p>Evoluçoes</p>
+            </NavLink>
+            <NavLink
               to="/settings"
               className={({isActive})=>
               isActive ? estiloDestacado: estiloNormal
