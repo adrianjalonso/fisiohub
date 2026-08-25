@@ -1,7 +1,38 @@
+import { useState,useEffect } from "react";
 import Menu from "../components/Menu";
 import { Link } from "react-router-dom";
+import { supabase } from "../lib/supabase";
+
+interface Paciente {
+  id: string,
+  nome_paciente:string,
+}
 
 export default function Evolucoes() {
+  const [pacientes, setPacientes] = useState<Paciente[]>([])
+  const [loading, setLoading] = useState(true)
+  const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(()=>{
+    async function buscarPacientes(){
+      setLoading(true);
+      setErro(null);
+
+      const {data,error} = await supabase.from("pacientes").select("*").order("created_at",{ascending: false})
+
+      if (error){
+        console.error("Error ao buscar pacientes:",error)
+        setErro("Não foi possivel carregar os pacientes.")
+      } else {
+        setPacientes(data)
+      }
+
+      setLoading(false)
+    }
+
+    buscarPacientes()
+  },[])
+  
   return (
     <div className="h-screen overflow-hidden flex flex-row">
       <Menu />
@@ -54,78 +85,46 @@ export default function Evolucoes() {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <figure className="bg-white px-6 py-4 border border-primary/35 hover:translate-x-1 hover:-translate-y-1 rounded-xl flex justify-between items-center sticky top-0 z-0 transition-all hover:shadow-md duration-200">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center font-headline-md font-bold">
-                    JS
+              {loading&& (
+                <p className="text-center py-8 text-gray-500">
+                  Carregando pacientes...
+                </p>
+              )}
+              {erro&&(
+                <p className="text-center py-8 text-red-500">
+                  {erro}
+                </p>
+              )}
+              {!loading&&!erro&& pacientes.length ===0 &&(
+                <p className="text-center py-8 text-gray-500">
+                  Nenhum paciente encontrado
+                </p>
+              )}
+              {!loading&&!erro&&pacientes.map((paciente)=>{
+                return(
+                <figure key={paciente.id} className="bg-white px-6 py-4 border border-primary/35 hover:translate-x-1 hover:-translate-y-1 rounded-xl flex justify-between items-center transition-all hover:shadow-md duration-200">
+                  <div className="flex items-center gap-4">
+                    <div className="size-12 rounded-full bg-primary flex items-center justify-center font-bold">
+                    {paciente.nome_paciente?.split("").splice(0,2).map((nome)=>nome[0]).join("").toUpperCase()}
+                    </div>
+                    <div>
+                      <h3 className="text-[20px] font-bold text-primary leading-tight">
+                        {paciente.nome_paciente}
+                      </h3>
+                      <p className="text-sm text-on-surface-variant">
+                        Prontuario: #{paciente.nome_paciente}
+                        {" • "}
+                        {paciente.nome_paciente}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-headline-md text-[20px] font-bold text-text-primary leading-tight">
-                      João Silva
-                    </h3>
-                    <p className="font-label-sm text-label-sm text-on-surface-variant">
-                      Prontuário: #PT-8472 • Reabilitação Pós-Operatória (LCA)
-                    </p>
-                  </div>
-                </div>
-                <button className="text-primary hover:bg-status-info-bg px-3 py-1.5 rounded-lg font-label-sm text-label-sm transition-colors border border-transparent hover:border-primary/20">
-                  Ver Prontuário Completo
-                </button>
-              </figure>
-              <figure className="bg-white px-6 py-4 border border-primary/35 hover:translate-x-1 hover:-translate-y-1 rounded-xl flex justify-between items-center sticky top-0 z-0 transition-all hover:shadow-md duration-200">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center font-headline-md font-bold">
-                    JS
-                  </div>
-                  <div>
-                    <h3 className="font-headline-md text-[20px] font-bold text-text-primary leading-tight">
-                      João Silva
-                    </h3>
-                    <p className="font-label-sm text-label-sm text-on-surface-variant">
-                      Prontuário: #PT-8472 • Reabilitação Pós-Operatória (LCA)
-                    </p>
-                  </div>
-                </div>
-                <button className="text-primary hover:bg-status-info-bg px-3 py-1.5 rounded-lg font-label-sm text-label-sm transition-colors border border-transparent hover:border-primary/20">
-                  Ver Prontuário Completo
-                </button>
-              </figure>
-              <figure className="bg-white px-6 py-4 border border-primary/35 hover:translate-x-1 hover:-translate-y-1 rounded-xl flex justify-between items-center sticky top-0 z-0 transition-all hover:shadow-md duration-200">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center font-headline-md font-bold">
-                    JS
-                  </div>
-                  <div>
-                    <h3 className="font-headline-md text-[20px] font-bold text-text-primary leading-tight">
-                      João Silva
-                    </h3>
-                    <p className="font-label-sm text-label-sm text-on-surface-variant">
-                      Prontuário: #PT-8472 • Reabilitação Pós-Operatória (LCA)
-                    </p>
-                  </div>
-                </div>
-                <button className="text-primary hover:bg-status-info-bg px-3 py-1.5 rounded-lg font-label-sm text-label-sm transition-colors border border-transparent hover:border-primary/20">
-                  Ver Prontuário Completo
-                </button>
-              </figure>
-              <figure className="bg-white px-6 py-4 border border-primary/35 hover:translate-x-1 hover:-translate-y-1 rounded-xl flex justify-between items-center sticky top-0 z-0 transition-all hover:shadow-md duration-200">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center font-headline-md font-bold">
-                    JS
-                  </div>
-                  <div>
-                    <h3 className="font-headline-md text-[20px] font-bold text-text-primary leading-tight">
-                      João Silva
-                    </h3>
-                    <p className="font-label-sm text-label-sm text-on-surface-variant">
-                      Prontuário: #PT-8472 • Reabilitação Pós-Operatória (LCA)
-                    </p>
-                  </div>
-                </div>
-                <button className="text-primary hover:bg-status-info-bg px-3 py-1.5 rounded-lg font-label-sm text-label-sm transition-colors border border-transparent hover:border-primary/20">
-                  Ver Prontuário Completo
-                </button>
-              </figure>
+
+                  <Link to={`/pacientes/${paciente.id}`} className="text-primary hover:bg-status-info-bg px-3 py-1.5 rounded-lg text-sm transition-colors border border-transparent hover:border-primary/20">
+                  Ver Prontuario completo
+                  </Link>
+
+                </figure>
+              )})}
             </div>
             <div className="flex justify-center pb-8 pt-4">
               <p className="text-xs text-center text-primary">
