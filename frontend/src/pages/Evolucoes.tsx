@@ -6,6 +6,15 @@ import { supabase } from "../lib/supabase";
 interface Paciente {
   id: string,
   nome_paciente:string,
+  evolucoes: Evolucoes[]
+}
+
+interface Evolucoes {
+  id: string,
+  paciente_id: string,
+  dor: string | null;
+  texto: string|null
+  created_at: string
 }
 
 export default function Evolucoes() {
@@ -18,7 +27,7 @@ export default function Evolucoes() {
       setLoading(true);
       setErro(null);
 
-      const {data,error} = await supabase.from("pacientes").select("*").order("created_at",{ascending: false})
+      const {data,error} = await supabase.from("pacientes").select(`id,nome_paciente,evolucoes(id,paciente_id,dor,texto,created_at)`)
 
       if (error){
         console.error("Error ao buscar pacientes:",error)
@@ -101,6 +110,9 @@ export default function Evolucoes() {
                 </p>
               )}
               {!loading&&!erro&&pacientes.map((paciente)=>{
+                const ultimaEvolucao = [...paciente.evolucoes].sort((a,b)=>
+                  new Date(b.created_at).getTime()-
+                new Date(a.created_at).getTime())[0];
                 return(
                 <figure key={paciente.id} className="bg-white px-6 py-4 border border-primary/35 hover:translate-x-1 hover:-translate-y-1 rounded-xl flex justify-between items-center transition-all hover:shadow-md duration-200">
                   <div className="flex items-center gap-4">
@@ -112,14 +124,21 @@ export default function Evolucoes() {
                         {paciente.nome_paciente}
                       </h3>
                       <p className="text-sm text-on-surface-variant">
-                        Prontuario: #{paciente.nome_paciente}
-                        {" • "}
-                        {paciente.nome_paciente}
+                        Prontuario: #{paciente.id}
+                        <p className="text-gray-400">
+                          Patologia
+                        </p>
+                        <p>{ultimaEvolucao?.dor?? "Não informado"}</p>
                       </p>
                     </div>
                   </div>
+                  <div>
+                    <p>Última evolução</p>
+                    <p className="text-primary font-bold text-lg">{ultimaEvolucao ? new Date(ultimaEvolucao.created_at).toLocaleDateString("pt-BR"): "Nenhuma evolução"}</p>
+                    <p>{ultimaEvolucao?.texto?? "Não informado"}</p>
+                  </div>
 
-                  <Link to={`/pacientes/${paciente.id}`} className="text-primary hover:bg-status-info-bg px-3 py-1.5 rounded-lg text-sm transition-colors border border-transparent hover:border-primary/20">
+                  <Link to={`/pacientes/${paciente.id}`} className="text-primary hover:bg-status-info-bg px-3 py-1.5 rounded-lg text-sm transition-colors border border-primary hover:bg-primary hover:text-white">
                   Ver Prontuario completo
                   </Link>
 
