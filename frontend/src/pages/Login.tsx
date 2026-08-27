@@ -15,9 +15,8 @@ export default function Login({setTitulo,setSobrenome,setIdUser}: LoginProps) {
   async function verificar(){
     const {data,error} = (await supabase.from("users").select("*").eq("user_email",email).single())  
     if(data){
-      const titulo = data.genero==="F" ? "Dra. ":"Dr. "
-      setTitulo(`${titulo}`)
-      localStorage.setItem("titulo",titulo)
+      setTitulo(`${data.titulo} `)
+      localStorage.setItem("titulo",data.titulo)
       setSobrenome(data.user_sobrenome)
       localStorage.setItem("sobrenome", data.user_sobrenome)
       setIdUser(data.user_id)
