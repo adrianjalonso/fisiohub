@@ -7,7 +7,7 @@ export default function Menu(){
   
 
   const estiloDestacado = "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-primary-dark transition-colors  bg-primary/30"
-  const estiloNormal = "flex items-center gap-3 rounded-lg hover:bg-primary-light/50 px-4 py-3 text-sm font-medium text-primary-dark transition-colors hover:bg-gray-300"
+  const estiloNormal = "flex items-center gap-3 rounded-lg hover:bg-primary/30 px-4 py-3 text-sm font-medium text-primary-dark transition-colors hover:bg-gray-300"
 
   return (
     <>

@@ -52,7 +52,7 @@ export default function Evolucoes() {
     buscarPacientes();
   }, [IdUser]);
 
-  //Busqueda sin acentos
+  //Busqueda sem acentos
   function normalizarTexto(texto: string) {
     return texto
       .normalize("NFD")
