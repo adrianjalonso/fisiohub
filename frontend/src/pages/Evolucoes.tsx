@@ -80,7 +80,7 @@ export default function Evolucoes() {
     <div className="h-screen overflow-hidden flex flex-row">
       <Menu />
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div>
+        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-emerald-100/60 to-transparent pointer-events-none"></div>
         <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p12 z-10 scroll-smooth">
           <div className="max-w-7xl mx-auto flex flex-col gap-2">
             <nav className="flex items-center text-sm font-medium">
