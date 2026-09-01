@@ -1,7 +1,40 @@
 import Menu from "../components/Menu";
 import { Link } from "react-router-dom";
+import { supabase } from "../lib/supabase";
+import { useEffect, useState } from "react";
+import { useUser } from "../context/UserContext";
 
 export default function Agenda() {
+
+  interface Agendamentos{
+    id: number,
+    paciente_id: number,
+    data_hora: string,
+    tipo: string,
+    status: string,
+    obsevacao: string
+  }
+
+  const { IdUser } = useUser()
+  const [Agenda, setAgenda] = useState<Agendamentos[]>([])
+
+  useEffect(()=>{
+
+   async function carregarAgenda(){
+    const {data,error}= await supabase.from("agendamentos").select("*").eq("id_user",IdUSer)
+
+    if(data){
+      setAgenda(data)
+    } else {
+      console.log(error)
+    }
+
+   } 
+
+   carregarAgenda()
+    
+  },[])
+
   return (
     <div className="h-screen overflow-hidden flex flex-row bg-slate-50">
       <Menu />
