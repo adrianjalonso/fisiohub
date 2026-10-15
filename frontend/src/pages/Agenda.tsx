@@ -117,10 +117,10 @@ export default function Agenda() {
                   </button>
                 </div>
 
-                <button className="flex-1 md:flex-none items-center justify-center px-6 py-3 rounded-lg bg-emerald-600 text-white font-bold shadow-md shadow-emerald-600/20 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-600/25 transition-all flex gap-2 min-w-[180px]">
+                <Link to={"/novoagendamento"} className="flex-1 md:flex-none items-center justify-center px-6 py-3 rounded-lg bg-emerald-600 text-white font-bold shadow-md shadow-emerald-600/20 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-600/25 transition-all flex gap-2 min-w-[180px]">
                   <span className="material-symbols-outlined">add</span>
                   Novo Agendamento
-                </button>
+                </Link>
               </div>
             </header>
 

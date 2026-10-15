@@ -11,6 +11,7 @@ import Agenda from "./pages/Agenda";
 import Settings from "./pages/Settings";
 import Evolucoes from "./pages/Evolucoes";
 import NovaEvolucao from "./pages/NovaEvolucao";
+import NovoAgendamento from "./pages/NovoAgendamento";
 
 export default function App() {
   const [titulo, setTitulo] = useState("");
@@ -68,6 +69,7 @@ export default function App() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/evolucoes" element={<Evolucoes />} />
         <Route path="/novaevolucao" element={<NovaEvolucao />} />
+        <Route path="/novoagendamento" element={<NovoAgendamento />} />
       </Routes>
     </div>
     </UserProvider>
