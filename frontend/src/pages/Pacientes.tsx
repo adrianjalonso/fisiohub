@@ -1,7 +1,78 @@
 import { Link } from "react-router-dom";
 import Menu from "../components/Menu";
+import { supabase } from "../lib/supabase";
+import { useEffect, useState } from "react";
+import { useUser } from "../context/UserContext";
 
 export default function Pacientes() {
+  interface Pacientes {
+    id: number;
+    nome_paciente: string;
+    sobrenome_paciente: string;
+    id_user: number;
+    genero: string;
+    status:string;
+    data_nascimento: string
+  }
+
+  function calcularIdade(dataDeNascimento: string) {
+    const hoje = new Date();
+    const nascimento = new Date(dataDeNascimento);
+    let idade = hoje.getFullYear()-nascimento.getFullYear()
+
+    const mesAtual= hoje.getMonth()
+    const diaAtual= hoje.getDate()
+
+    const mesNascimento = nascimento.getMonth()
+    const diaNascimento = nascimento.getDate()
+
+    if (mesAtual<mesNascimento||(mesAtual===mesNascimento&&diaAtual<diaNascimento)){
+      idade--
+    }
+    return idade;
+  }
+
+
+
+  const {IdUser}= useUser()
+  const [totalPacientes, setTotalPacientes] = useState(0)
+  const [pacientes, setPacientes] = useState<Pacientes[]>([])
+  const [pacientesAtivos, setPacientesAtivos] = useState(0)
+
+  
+  
+
+  useEffect(()=>{
+    async function carregarPacientes(){
+      const {count:listaPacientes,error:errorLista} = await supabase.from("pacientes").select("*",{count:"exact", head: true}).eq("id_user",IdUser)
+
+      if (listaPacientes) {
+        setTotalPacientes(listaPacientes||0)
+      } else{
+        console.log(errorLista)
+      }
+
+      const {data,error} = await supabase.from("pacientes").select("*").eq("id_user",IdUser)
+
+      if (data){
+        setPacientes(data)
+      } else {
+        console.log(error)
+      }
+
+      const {count: pacientesAtivos,error: pacientesAtivosError} = await supabase.from("pacientes").select("*",{count: "exact",head: true}).eq("id_user",IdUser).eq("status","Tratamento ativo")
+
+      if (pacientesAtivos){
+        setPacientesAtivos(pacientesAtivos)
+      } else {
+        console.log(pacientesAtivosError)
+      }
+    }
+
+    carregarPacientes()
+  },[IdUser])
+
+
   return (
     <div className="h-screen overflow-hidden flex flex-row">
       <Menu />
@@ -34,13 +105,13 @@ export default function Pacientes() {
                   <span className="text-xs font-semibold uppercase tracking-wider">
                     Total de pacientes
                   </span>
-                  <span className="text-2xl font-bold">142</span>
+                  <span className="text-2xl font-bold">{totalPacientes}</span>
                 </div>
                 <div className="flex flex-col items-end px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-100">
                   <span className="text-xs font-semibold uppercase tracking-wider">
                     Ativos hoje
                   </span>
-                  <span className="text-2xl font-bold text-primary">12</span>
+                  <span className="text-2xl font-bold text-primary">{pacientesAtivos}</span>
                 </div>
               </div>
             </header>
@@ -136,11 +207,11 @@ export default function Pacientes() {
                         </div>
                       </td>
                       <td className="py-4 px-6 align-middle">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-600"></span>
-                          Tratamento ativo
-                        </span>
-                      </td>
+<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 ">
+<span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
+                                            Alta
+                                        </span>
+</td>
                       <td className="py-4 px-6 align-middle text-right">
                         <button className="text-gray-400 hover:text-primary transition-colors p-2 rounded-full hover:bg-gray-100">
                           <span className="material-symbols-outlined">
@@ -149,216 +220,85 @@ export default function Pacientes() {
                         </button>
                       </td>
                     </tr>
-                    <tr className="hover:bg-primary/5 transition-colors cursor-pointer">
-                      <td className="py-4 px-6 align-middle">
-                        <input
-                          className="rounded border-gray-300 text-primary focus:ring-primary bg-transparent"
-                          type="checkbox"
-                        />
-                      </td>
-                      <td className="py-4 px-6 align-middle">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-sm">
-                            MR
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-bold text-base">
-                              Marcus Reed
-                            </span>
-                            <span className="text-xs text-primary/90 ">
-                              ID: #PT-2023-44
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 align-middle">
-                        <div className="text-sm ">45 anos</div>
-                        <div className="text-xs ">Masculino</div>
-                      </td>
-                      <td className="py-4 px-6 align-middle">
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-sm">
-                            history
-                          </span>
-                          <span className="text-sm font-medium">
-                            20 Out, 2023
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 align-middle">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-600"></span>
-                          Tratamento ativo
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 align-middle text-right">
-                        <button className="text-gray-400 hover:text-primary transition-colors p-2 rounded-full hover:bg-gray-100">
-                          <span className="material-symbols-outlined">
-                            more_vert
-                          </span>
-                        </button>
-                      </td>
-                    </tr>
-                    <tr className="hover:bg-primary/5 transition-colors cursor-pointer">
-                      <td className="py-4 px-6 align-middle">
-                        <input
-                          className="rounded border-gray-300 text-primary focus:ring-primary bg-transparent"
-                          type="checkbox"
-                        />
-                      </td>
-                      <td className="py-4 px-6 align-middle">
-                        <div className="flex items-center gap-3">
-                          <img
-                            className="size-10 rounded-full object-cover bg-gray-200"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCbjvL6zLS2kQh10Y8yWRrHmA4A1gWVCyvXA9v6DsY-uxQJ-iOG--SmwgVz5Wx8hCOUfgU1e-FcUr0ELs9uJcQdTat4nwlbQMSPu29digqfn0bYrRQpJvEf6jRJiXeusz48bdMC5ZoQ9qihc_ZtwPu99luvnodeqjJymCoOZkAgfYSVUq-3Pq7DE1G3tyB7QG-Gtqkg90sdiU681SGSfjL38vnr09cAvmic3tZdEsGPtgT8xBMMG2pOzvi9CSNk8aFbRfkLwHJWoQ"
-                            alt="paciente"
-                          />
-                          <div className="flex flex-col">
-                            <span className="font-bold text-base">
-                              Arthur C. Clarke
-                            </span>
-                            <span className="text-xs text-primary/90 ">
-                              ID: #PT-2023-12
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 align-middle">
-                        <div className="text-sm ">72 anos</div>
-                        <div className="text-xs ">Masculino</div>
-                      </td>
-                      <td className="py-4 px-6 align-middle">
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-sm">
-                            history
-                          </span>
-                          <span className="text-sm font-medium">
-                            18 Out, 2023
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 align-middle">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
-                          Avaliação pendente
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 align-middle text-right">
-                        <button className="text-gray-400 hover:text-primary transition-colors p-2 rounded-full hover:bg-gray-100">
-                          <span className="material-symbols-outlined">
-                            more_vert
-                          </span>
-                        </button>
-                      </td>
-                    </tr>
-                    <tr className="hover:bg-primary/5 transition-colors cursor-pointer">
-                      <td className="py-4 px-6 align-middle">
-                        <input
-                          className="rounded border-gray-300 text-primary focus:ring-primary bg-transparent"
-                          type="checkbox"
-                        />
-                      </td>
-                      <td className="py-4 px-6 align-middle">
-                        <div className="flex items-center gap-3">
-                          <img
-                            className="size-10 rounded-full object-cover bg-gray-200"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-rO7V36CphQekEMHu799Lujja597trsUpZzYo1ONNowZqoLVdBt71O6enl60oSMk0UNZTIOPBwyAMSchcUe2EdB59BPjFeOf527gL6QmNUCxTv0xHjLEL5gj9dZx_rmFAy3ee6KhTNy6pPKkEn7tIXv6M1i82HUdXLodaCy0oJOcRuxEM_Tw5RhspDKzhH3znEhb2WmN4J5zBt3ymFETjcbPWpPmlQgFIeo_FRLb__PR1Uwlt0Y4K-U67RJlIFJuYTufni52JgWE"
-                            alt="paciente"
-                          />
-                          <div className="flex flex-col">
-                            <span className="font-bold text-base">
-                              Elena Rodriguez
-                            </span>
-                            <span className="text-xs text-primary/90 ">
-                              ID: #PT-2023-99
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 align-middle">
-                        <div className="text-sm ">28 anos</div>
-                        <div className="text-xs ">Feminino</div>
-                      </td>
-                      <td className="py-4 px-6 align-middle">
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-sm">
-                            history
-                          </span>
-                          <span className="text-sm font-medium">
-                            30 Set, 2023
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 align-middle">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                          <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
-                          Alta
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 align-middle text-right">
-                        <button className="text-gray-400 hover:text-primary transition-colors p-2 rounded-full hover:bg-gray-100">
-                          <span className="material-symbols-outlined">
-                            more_vert
-                          </span>
-                        </button>
-                      </td>
-                    </tr>
-                    <tr className="hover:bg-primary/5 transition-colors cursor-pointer">
-                      <td className="py-4 px-6 align-middle">
-                        <input
-                          className="rounded border-gray-300 text-primary focus:ring-primary bg-transparent"
-                          type="checkbox"
-                        />
-                      </td>
-                      <td className="py-4 px-6 align-middle">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-sm">
-                            JD
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-bold text-base">
-                              John Doe
-                            </span>
-                            <span className="text-xs text-primary/90 ">
-                              ID: #PT-2023-01
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 align-middle">
-                        <div className="text-sm ">55 anos</div>
-                        <div className="text-xs ">Masculino</div>
-                      </td>
-                      <td className="py-4 px-6 align-middle">
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-sm">
-                            history
-                          </span>
-                          <span className="text-sm font-medium">
-                            15 Set, 2023
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 align-middle">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-600"></span>
-                          Tratamento ativo
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 align-middle text-right">
-                        <button className="text-gray-400 hover:text-primary transition-colors p-2 rounded-full hover:bg-gray-100">
-                          <span className="material-symbols-outlined">
-                            more_vert
-                          </span>
-                        </button>
-                      </td>
-                    </tr>
+                    {pacientes.map((paciente) => (
+  <tr
+    key={paciente.id}
+    className="hover:bg-primary/5 transition-colors cursor-pointer"
+  >
+    <td className="py-4 px-6 align-middle">
+      <input
+        className="rounded border-gray-300 text-primary focus:ring-primary bg-transparent"
+        type="checkbox"
+      />
+    </td>
+
+    <td className="py-4 px-6 align-middle">
+      <div className="flex items-center gap-3">
+        <img
+          className="size-10 rounded-full object-cover bg-gray-200"
+          src={`https://api.dicebear.com/10.x/personas/svg?seed=${paciente.id}`}
+          alt={paciente.nome_paciente}
+        />
+
+        <div className="flex flex-col">
+          <span className="font-bold text-base">
+            {paciente.nome_paciente} {paciente.sobrenome_paciente}
+          </span>
+
+          <span className="text-xs text-primary/90">
+            ID: #{paciente.id}
+          </span>
+        </div>
+      </div>
+    </td>
+
+    <td className="py-4 px-6 align-middle">
+      <div className="text-sm">
+        {`${calcularIdade(paciente.data_nascimento)} anos` || "Não informado"}
+      </div>
+        <div className="text-xs">
+        {paciente.genero || "Não informado"}
+      </div>
+    </td>
+
+    <td className="py-4 px-6 align-middle">
+      <div className="flex items-center gap-2">
+        <span className="material-symbols-outlined text-sm">
+          person
+        </span>
+
+        <span className="text-sm font-medium">
+          Paciente cadastrado
+        </span>
+      </div>
+    </td>
+
+    <td className="py-4 px-6 align-middle">
+      <span className={`${paciente.status=== "Tratamento ativo" ? "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800":"inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600"} `}>
+        <span className={`${paciente.status=== "Tratamento ativo" ? "w-1.5 h-1.5 rounded-full bg-green-600":"w-1.5 h-1.5 rounded-full bg-gray-500"} `} />
+        <span className="" />
+        {paciente.status}
+      </span>
+    </td>
+
+    <td className="py-4 px-6 align-middle text-right">
+      <button
+        type="button"
+        className="text-gray-400 hover:text-primary transition-colors p-2 rounded-full hover:bg-gray-100"
+      >
+        <span className="material-symbols-outlined">
+          more_vert
+        </span>
+      </button>
+    </td>
+  </tr>
+))}
                   </tbody>
                 </table>
               </div>
               <div className="mt-auto border-t border-gray-100 px-6 py-4 flex flex-col md:flex-row items-center justify-center gap-4">
                 <p className="text-sm">
-                  Mostrando <span className="font-medium">1-5</span> de <span className="font-medium">142</span> pacientes
+                  Mostrando <span className="font-medium">1-5</span> de <span className="font-medium">{totalPacientes}</span> pacientes
                 </p>
                 <div className="flex gap-2">
                   <button className="px-4 py-2 text-sm font-medium bg-transparent border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50">Anterior</button>

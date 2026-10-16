@@ -109,8 +109,8 @@ export default function Registro ({IdUser}: {IdUser: number}) {
                       <span className="text-[20px] absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined">person</span>
                       <select onChange={(e)=>setGenero(e.target.value)} className="w-full rounded-lg border-gray-200 bg-gray-50 pl-11 pr-10 py-3 focus:border-primary focus:ring-primary sm:text-sm transition-all appearance-none">
                         <option value="">Selecione</option>
-                        <option value="M">Masculino</option>
-                        <option value="F">Femenino</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
                       </select>
                     </div>
                   </div>
