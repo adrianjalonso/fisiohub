@@ -8,24 +8,64 @@ export default function NovaEvolucao() {
 
   interface ListaPacientes {
     nome_paciente: string,
-    id: string
+    id: number
   }
+
 
   const {IdUser} = useUser()
   const [listaPacientes, setListaPacientes] = useState<ListaPacientes[]>([])
+  const [evolucao, setEvolucao] = useState("")
+  const [idPaciente, setIdPaciente] = useState(0)
 
-  useEffect(()=>{
-    async function listaPacientes(){
-      const {data,error} = await supabase.from("pacientes").select("nome_paciente,id").eq("id_user",IdUser)
+  useEffect(() => {
+  async function carregarPacientes() {
+    const { data, error } = await supabase
+      .from("pacientes")
+      .select("nome_paciente, id")
+      .eq("id_user", IdUser);
 
-      if (data) {
-        setListaPacientes(data)
-      } else {
-        console.error(error)
-      }
+    if (error) {
+      console.error("Erro ao carregar pacientes:", error);
+      return;
     }
-    listaPacientes()
-  },[])
+
+    setListaPacientes(data ?? []);
+  }
+
+  if (IdUser) {
+    carregarPacientes();
+  }
+}, [IdUser]);
+
+
+
+  async function salvarEvolucao(e: any) {
+  e.preventDefault();
+
+  if (!idPaciente || !evolucao.trim()) {
+    alert("Seleciona um paciente e escreve a evolução.");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("evolucoes")
+    .insert({
+      paciente_id: idPaciente,
+      fisioterapeuta_id: IdUser,
+      texto: evolucao.trim(),
+    });
+
+  if (error) {
+    console.error("Erro ao salvar evolução:", error);
+    alert(`Erro ao salvar: ${error.message}`);
+    return;
+  }
+
+  alert("Evolução salva com sucesso!");
+  setEvolucao("");
+  setIdPaciente(0);
+}
+  
 
 
   return (
@@ -69,18 +109,22 @@ export default function NovaEvolucao() {
                     </span>
 
                     <select
+                    value={idPaciente === 0 ? "" : String(idPaciente)}
+                    onChange={(e)=>{
+                      const idSelecionado = Number(e.target.value);
+                      setIdPaciente(idSelecionado)
+                    }}
                       className="w-full rounded-lg border-gray-200 bg-gray-100 pl-11 pr-10 py-3 focus:border-primary focus:ring-primary sm:text-sm transition-all appearance-none"
-                      defaultValue=""
                     >
                       <option value="" disabled>
                         Selecione um paciente...
                       </option>
                       {listaPacientes.map((paciente)=>{
                         return(
-                          <option key={paciente.id} value="">{paciente.nome_paciente}</option>
+                          <option key={paciente.id} value={paciente.id} >{paciente.nome_paciente}</option>
                         )
                       }   
-                      )}
+                      )} 
                     </select>
 
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined pointer-events-none">
@@ -89,7 +133,7 @@ export default function NovaEvolucao() {
                   </div>
                 </div>
               </div>
-              <textarea className="w-full rounded-lg border-gray-200 bg-gray-100 p-4 placeholder-gray-400 focus:border-primary focus:ring-primary sm:text-sm transition-all resize-none" placeholder="Descreva a evoluçao do paciente... " rows={6}></textarea>
+              <textarea value={evolucao} onChange={(e)=> setEvolucao(e.target.value)} className="w-full rounded-lg border-gray-200 bg-gray-100 p-4 placeholder-gray-400 focus:border-primary focus:ring-primary sm:text-sm transition-all resize-none" placeholder="Descreva a evoluçao do paciente... " rows={6}></textarea>
             </div>
             
             <div className="px-6 py-4 md:px-8 md-py-6 bg-gray-50 flex justify-end items-center gap-4 border-t border-gray-100">
@@ -100,6 +144,7 @@ export default function NovaEvolucao() {
                 Cancelar
               </button>
               <button
+              onClick={salvarEvolucao}
                 className="px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-black text-sm font-bold shadow-sm hover:shadow-md transition-all flex items-center gap-2"
                 type="submit"
               >

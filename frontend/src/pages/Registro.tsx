@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 import { createClient } from "@supabase/supabase-js"
-import {  useState } from "react"
+import  {  useState } from "react"
 import Menu from "../components/Menu"
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL,import.meta.env.VITE_SUPABASE_ANON_KEY)
@@ -14,6 +14,7 @@ export default function Registro ({IdUser}: {IdUser: number}) {
   const [telefone,setTelefone] = useState("")
   const [endereco,setEndereco] = useState("")
   const [genero,setGenero] = useState("")
+  const [anamnese, setAnamnese] = useState("")
 
   function formatarTelefone(valor:string){
     valor = valor.replace(/\D/g,"")
@@ -41,6 +42,16 @@ export default function Registro ({IdUser}: {IdUser: number}) {
     } else{
       console.log("Paciente cadastrado!",data)
     }
+
+    alert("Paciente novo salvo com sucesso!")
+    setDataDeNascimento("")
+    setEmailPaciente("")
+    setEndereco("")
+    setGenero("")
+    setIdade(0)
+    setNomeNovoPaciente("")
+    setTelefone("")
+    setAnamnese("")
   }
 
 
@@ -92,7 +103,7 @@ export default function Registro ({IdUser}: {IdUser: number}) {
                   <label className="text-sm font-medium text-gray-700">Nome completo</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined text-[20px]">badge</span>
-                    <input onChange={(e)=>setNomeNovoPaciente(e.target.value)}  className="w-full rounded-lg border-gray-200 bg-gray-50 pl-11 pr-4 py-3 placeholder-gray-400 focus:border-primary focus:ring-primary sm:text-sm transition-all" placeholder="ex: Maria Silva" type="text" />
+                    <input value={nomeNovoPaciente} onChange={(e)=>setNomeNovoPaciente(e.target.value)}  className="w-full rounded-lg border-gray-200 bg-gray-50 pl-11 pr-4 py-3 placeholder-gray-400 focus:border-primary focus:ring-primary sm:text-sm transition-all" placeholder="ex: Maria Silva" type="text" />
                   </div>
                 </div>
                 <div className="  grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -100,14 +111,14 @@ export default function Registro ({IdUser}: {IdUser: number}) {
                     <label className="text-sm font-medium text-gray-700">Data de nascimento</label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined text-[20px]">calendar_month</span>
-                      <input onChange={(e)=>{setDataDeNascimento(e.target.value);setIdade(calcularIdade(e.target.value))}}  className="w-full rounded-lg border-gray-200 bg-gray-50 pl-11 pr-4 py-3 placeholder-gray-400 focus:border-primary focus:ring-primary sm:text-sm transition-all" type="date" />
+                      <input value={DataDeNascimento} onChange={(e)=>{setDataDeNascimento(e.target.value);setIdade(calcularIdade(e.target.value))}}  className="w-full rounded-lg border-gray-200 bg-gray-50 pl-11 pr-4 py-3 placeholder-gray-400 focus:border-primary focus:ring-primary sm:text-sm transition-all" type="date" />
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-medium text-gray-700">Gênero</label>
                     <div className="relative">
                       <span className="text-[20px] absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined">person</span>
-                      <select onChange={(e)=>setGenero(e.target.value)} className="w-full rounded-lg border-gray-200 bg-gray-50 pl-11 pr-10 py-3 focus:border-primary focus:ring-primary sm:text-sm transition-all appearance-none">
+                      <select value={genero} onChange={(e)=>setGenero(e.target.value)} className="w-full rounded-lg border-gray-200 bg-gray-50 pl-11 pr-10 py-3 focus:border-primary focus:ring-primary sm:text-sm transition-all appearance-none">
                         <option value="">Selecione</option>
                         <option value="Masculino">Masculino</option>
                         <option value="Femenino">Femenino</option>
@@ -135,7 +146,7 @@ export default function Registro ({IdUser}: {IdUser: number}) {
                   <label className="text-sm font-medium text-gray-700">E-mail</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined text-[20px]">mail</span>
-                    <input onChange={(e)=>setEmailPaciente(e.target.value)} className="w-full rounded-lg border-gray-200 bg-gray-50 pl-11 pr-4 py-3 placeholder-gray-400 focus:border-primary focus:ring-primary sm:text-sm transition-all" placeholder="maria@exemplo.com" type="email" />
+                    <input value={emailPaciente} onChange={(e)=>setEmailPaciente(e.target.value)} className="w-full rounded-lg border-gray-200 bg-gray-50 pl-11 pr-4 py-3 placeholder-gray-400 focus:border-primary focus:ring-primary sm:text-sm transition-all" placeholder="maria@exemplo.com" type="email" />
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
@@ -149,7 +160,7 @@ export default function Registro ({IdUser}: {IdUser: number}) {
                   <label className="text-sm font-medium text-gray-700">Endereço</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined text-[20px]">home</span>
-                    <input onChange={(e)=> setEndereco(e.target.value)} className="w-full rounded-lg border-gray-200 bg-gray-50 pl-11 pr-4 py-3 placeholder-gray-400 focus:border-primary focus:ring-primary sm:text-sm transition-all" placeholder="Av. Paulista, 1000 São Paulo, SP" type="text" />
+                    <input value={endereco} onChange={(e)=> setEndereco(e.target.value)} className="w-full rounded-lg border-gray-200 bg-gray-50 pl-11 pr-4 py-3 placeholder-gray-400 focus:border-primary focus:ring-primary sm:text-sm transition-all" placeholder="Av. Paulista, 1000 São Paulo, SP" type="text" />
                   </div>
                 </div>
               </div>
@@ -166,7 +177,7 @@ export default function Registro ({IdUser}: {IdUser: number}) {
                   <label className="text-sm font-medium tetx-gray-700 ">Motivo da Fisioterapia</label>
                   <span className="text-sm text-gray-400 italic">Por favor, inclua os principais sintomas e a duração</span>
                 </div>
-                <textarea className="w-full rounded-lg border-gray-200 bg-gray-50 p-4 placeholder-gray-400 focus:border-primary focus:ring-primary sm:text-sm transition-all resize-none" placeholder="Descreva a queixa principal do paciente, histórico de lesões e quaisquer detalhes relevantes... " rows={6}></textarea>
+                <textarea onChange={(e)=>setAnamnese(e.target.value)} value={anamnese} className="w-full rounded-lg border-gray-200 bg-gray-50 p-4 placeholder-gray-400 focus:border-primary focus:ring-primary sm:text-sm transition-all resize-none" placeholder="Descreva a queixa principal do paciente, histórico de lesões e quaisquer detalhes relevantes... " rows={6}></textarea>
               </div>
             </div>
             <div className="px-6 py-4 md:px-8 md-py-6 bg-gray-50 flex justify-end items-center gap-4 border-t border-gray-100">
