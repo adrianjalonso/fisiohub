@@ -121,7 +121,7 @@ export default function Registro ({IdUser}: {IdUser: number}) {
                       <select value={genero} onChange={(e)=>setGenero(e.target.value)} className="w-full rounded-lg border-gray-200 bg-gray-50 pl-11 pr-10 py-3 focus:border-primary focus:ring-primary sm:text-sm transition-all appearance-none">
                         <option value="">Selecione</option>
                         <option value="Masculino">Masculino</option>
-                        <option value="Femenino">Femenino</option>
+                        <option value="Feminino">Feminino</option>
                       </select>
                     </div>
                   </div>

@@ -1,5 +1,5 @@
 import Menu from "../components/Menu";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useEffect,useState } from "react";
 import { useUser } from "../context/UserContext";
@@ -11,11 +11,13 @@ export default function NovaEvolucao() {
     id: number
   }
 
+  const location = useLocation()
+  const idPacienteRecebido = location.state?.idPaciente
 
   const {IdUser} = useUser()
   const [listaPacientes, setListaPacientes] = useState<ListaPacientes[]>([])
   const [evolucao, setEvolucao] = useState("")
-  const [idPaciente, setIdPaciente] = useState(0)
+  const [idPaciente, setIdPaciente] = useState<number>(idPacienteRecebido??0)
 
   useEffect(() => {
   async function carregarPacientes() {
@@ -121,7 +123,7 @@ export default function NovaEvolucao() {
                       </option>
                       {listaPacientes.map((paciente)=>{
                         return(
-                          <option key={paciente.id} value={paciente.id} >{paciente.nome_paciente}</option>
+                          <option key={paciente.id} value={String(paciente.id)} >{paciente.nome_paciente}</option>
                         )
                       }   
                       )} 

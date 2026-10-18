@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Menu from "../components/Menu";
 import { supabase } from "../lib/supabase";
 import { useEffect, useState, useRef } from "react";
@@ -16,6 +16,8 @@ export default function Pacientes() {
     status: string;
     data_nascimento: string;
   }
+
+  const navigate = useNavigate()
 
   function calcularIdade(dataDeNascimento: string) {
     const hoje = new Date();
@@ -525,9 +527,14 @@ const pacientesFiltrados = pacientes.filter((paciente)=>{
       </button>
 
       <button
+      type="button"
         onClick={() => {
-          setMenuAberto(null);
-          console.log("Registrar evolução:", pacienteDoMenu.id);
+          navigate("/novaevolucao",{
+            state:{
+              idPaciente:pacienteDoMenu.id
+            }
+          })
+          setMenuAberto(null)
         }}
         className="flex w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50"
       >
