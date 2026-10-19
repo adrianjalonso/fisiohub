@@ -11,6 +11,12 @@ const supabase = createClient(
 
 export default function Dashboard() {
 
+  interface Pacientes {
+    id: number;
+
+
+  }
+
   const {titulo,sobrenome,IdUser} = useUser()
 
   const hoje = new Date();
@@ -68,6 +74,7 @@ export default function Dashboard() {
   const [comparacao, setComparacao] = useState("");
   const [totalPacientes, setTotalPacientes] = useState(0);
   const [ComparacaoPacientes, setComparacaoPacientes] = useState("");
+  const [listaPacientes, setListaPacientes] = useState<Pacientes[]>([])
 
   useEffect(() => {
     if (!IdUser) return;
@@ -159,7 +166,36 @@ export default function Dashboard() {
       }
       setAtendimentosHoje(hoje);
       setAgendamentosHoje(data || []);
+
+      const { data: dadosLista, error: dadosError } = await supabase
+  .from("pacientes")
+  .select(`
+    id,
+    nome_paciente,
+    sobrenome_paciente,
+    telefone,
+    email,
+    agendamentos!inner (
+      id,
+      data_hora,
+      status,
+      evolucoes (
+        id
+      )
+    )
+  `)
+  .eq("id_user", IdUser)
+  .eq("agendamentos.status", "atendido")
+  .lte("agendamentos.data_hora", new Date().toISOString())
+  .is("agendamentos.evolucoes.id", null);
+
+if (dadosError) {
+  console.error("Erro ao buscar pacientes:", dadosError);
+} else {
+  setListaPacientes(dadosLista ?? []);
+}
     }
+  
     carregarDados();
   }, [IdUser]);
 
@@ -257,13 +293,16 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-            <div className="flex flex-col gap-4 rounded-xl p-6 shadow-md bg-white lg:col-span-2">
-              <div className="flex items-center justify-between ">
+            <div className="flex flex-col gap-4 rounded-xl p-6 shadow-md bg-white lg:col-span-2 ">
+              <div className="flex items-center justify-between  ">
                 <h3 className="text-lg font-bold">Agenda de hoje</h3>
                 <button className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-primary-dark">
                   <span className="material-symbols-outlined text-sm">add</span>
                   Novo atendimento
-                </button>
+                </button> 
+              </div>
+              <div className="flex items-center justify-center text-gray-500 text-xl h-full">
+                Não há atendimentos
               </div>
               <div className="flex flex-col gap-3 ">
                 {agendamentosHoje.map((agendamento) => (
