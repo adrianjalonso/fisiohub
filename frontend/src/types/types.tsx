@@ -17,3 +17,4 @@ export type Agendamento = {
     sobrenome_paciente:string
   }
 }
+

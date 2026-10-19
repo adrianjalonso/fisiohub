@@ -11,11 +11,23 @@ const supabase = createClient(
 
 export default function Dashboard() {
 
-  interface Pacientes {
+  interface AgendamentoPendente {
+  id: number;
+  data_hora: string;
+  status: string | null;
+  evolucoes: {
     id: number;
+  }[];
+}
 
-
-  }
+interface Pacientes {
+  id: number;
+  nome_paciente: string | null;
+  sobrenome_paciente: string | null;
+  telefone: string | null;
+  email: string | null;
+  agendamentos: AgendamentoPendente[];
+}
 
   const {titulo,sobrenome,IdUser} = useUser()
 
@@ -185,19 +197,20 @@ export default function Dashboard() {
     )
   `)
   .eq("id_user", IdUser)
-  .eq("agendamentos.status", "atendido")
-  .lte("agendamentos.data_hora", new Date().toISOString())
-  .is("agendamentos.evolucoes.id", null);
+  .eq("agendamentos.status", "Atendido")
+  .lte("agendamentos.data_hora", new Date().toISOString());
 
 if (dadosError) {
   console.error("Erro ao buscar pacientes:", dadosError);
 } else {
-  setListaPacientes(dadosLista ?? []);
+  setListaPacientes((dadosLista ?? []) as Pacientes[]);
 }
     }
   
     carregarDados();
+    
   }, [IdUser]);
+
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
@@ -301,9 +314,6 @@ if (dadosError) {
                   Novo atendimento
                 </button> 
               </div>
-              <div className="flex items-center justify-center text-gray-500 text-xl h-full">
-                Não há atendimentos
-              </div>
               <div className="flex flex-col gap-3 ">
                 {agendamentosHoje.map((agendamento) => (
                   <div
@@ -357,62 +367,28 @@ if (dadosError) {
                 Anotações das sessões de ontem que precisam ser concluídas.
               </p>
               <div className="flex flex-col gap-3">
-                <div className="flex flex-col gap-3 rounded-lg border border-amber-100 bg-amber50/50 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <img
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWcwy6nONP8Lwm4euJw8-KIv-sPJYE5e_2oIRNY3M75sq11JtWON1FRanaDGhAka6uz6-598ZxCsGRzZWT0kaMTQ4O5RTzup6DH1M-_acxA3ySxDaiAb3Pl5CMnNYjSxgAFi5mhrwdlFXpZS8oDnETVMzoifwmzdyW5XMqUV5xgAXrZ3I86vTRNWUm1co10wSObr1hnO3Xk9gEp3hGWjqZYPGfKtD2MO9_YUzntMKdjnx940ba2QLn_f41ubK45aq0aotdTC4jZyQ"
-                        className="size-8 rounded-full bg-cover bg-center"
-                      />
-                      <p className="font-medium ">Cameron W.</p>
-                    </div>
-                    <p className="text-xs ">Ontem, 14:00</p>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="rounded bg-gray-100 px-2 py-1 text-xs font-medium shadow-sm">
-                      Dor no pescoço
-                    </p>
-                    <button className="flex items-center gap-1 text-xs font-bold text-primary-dark hover:underline">
-                      Completar nota{" "}
-                      <span className="material-symbols-outlined text-sm">
-                        arrow_forward
-                      </span>
-                    </button>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-3 rounded-lg border border-amber-100 bg-amber50/50 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <img
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBReCe0G64R-38bU0pEAVFwahoOXZlVu81Si-9yfBhY0tZ9BxOyPv3JT2y8qypIXUL7sGrhT1Wpo5-eL_PTsF8S1lyocMrwSvSgRBNS-MGBvvSwbFqlQXb2neTH_gY7gC_EUQhHf2nGo13LSH8ej0q7NpTW6B4426KT7I2SRas6qJYS8Bc6fY_8ZtROgyj0JpIK7Lzx0kQMW5dD4Je1TtmheAgMtMuVSjVGYGl1EGxL219GtYAMWtOERkPTg9r8fgXiIOi4iJuBKM4"
-                        className="size-8 rounded-full bg-cover bg-center"
-                      />
-                      <p className="font-medium ">Esther Howard</p>
-                    </div>
-                    <p className="text-xs ">Ontem, 16:30</p>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="rounded bg-gray-100 px-2 py-1 text-xs font-medium shadow-sm">
-                      Distensão lombar
-                    </p>
-                    <button className="flex items-center gap-1 text-xs font-bold text-primary-dark hover:underline">
-                      Completar nota{" "}
-                      <span className="material-symbols-outlined text-sm">
-                        arrow_forward
-                      </span>
-                    </button>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-3 rounded-lg border border-amber-100 bg-amber50/50 p-4">
+                {listaPacientes.map((paciente)=>(
+                  <div key={paciente.id} className="flex flex-col gap-3 rounded-lg border border-amber-100 bg-amber-50/50 p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <img
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-qvnL-sbLyJ1jkkuTfcSZstIytTIb6bsm6ngplh648fhYKqRHT3acZOkASeAU_ogq_uGVm5EYlD0v2P3ibgSTLPDJYbjboHQlnFF7kSyMrL7ZreYSIUX9phCB23t-KUbHQ2AsDP41aMAJrlCJuE9TB3mBfmGD5HJpR0JX35zccFxmEdC9Xoxb1eGbJyyfwlwYJBYuzS7EfHmcvMdpbxUVvN_aax2mSdV4QXd6hOLol9h6drCgiCt1c18H9kFL6G33X9-xQ-WTXZo"
                         className="size-8 rounded-full bg-cover bg-center"
                       />
-                      <p className="font-medium ">Marvin M.</p>
+                      <p className="font-medium ">{paciente.nome_paciente}</p>
                     </div>
-                    <p className="text-xs ">Ontem, 17:00</p>
+                    <p className="text-xs">
+  {paciente.agendamentos?.[0]?.data_hora
+    ? new Date(
+        paciente.agendamentos[0].data_hora
+      ).toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "Data indisponível"}
+</p>
                   </div>
                   <div className="flex items-center justify-between">
                     <p className="rounded bg-gray-100 px-2 py-1 text-xs font-medium shadow-sm">
@@ -426,6 +402,7 @@ if (dadosError) {
                     </button>
                   </div>
                 </div>
+                ))}
               </div>
               <button className="mt-2 w-full rounded-lg border border-dashed border-gray-300 py-2 text-sm font-medium transition hover:border-primary hover:text-primary">
                 Ver todas as tarefas pendentes
