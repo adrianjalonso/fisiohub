@@ -5,39 +5,50 @@ import { useEffect, useState, useRef } from "react";
 import { useUser } from "../context/UserContext";
 import { createPortal } from "react-dom";
 
+interface Pacientes {
+  id: number;
+  nome_paciente: string;
+  sobrenome_paciente: string;
+  id_user: number;
+  genero: string;
+  status: string;
+  data_nascimento: string;
+}
 
-export default function Pacientes() {
-  interface Pacientes {
-    id: number;
-    nome_paciente: string;
-    sobrenome_paciente: string;
-    id_user: number;
-    genero: string;
-    status: string;
-    data_nascimento: string;
+const ALTURA_ESTIMADA_MENU = 320;
+const LARGURA_MENU = 240;
+
+function calcularIdade(dataDeNascimento: string | null) {
+  if (!dataDeNascimento) return null;
+  const hoje = new Date();
+  const nascimento = new Date(dataDeNascimento);
+  if (Number.isNaN(nascimento.getTime())) return null;
+
+  let idade = hoje.getFullYear() - nascimento.getFullYear();
+
+  const mesAtual = hoje.getMonth();
+  const diaAtual = hoje.getDate();
+  const mesNascimento = nascimento.getMonth();
+  const diaNascimento = nascimento.getDate();
+
+  if (
+    mesAtual < mesNascimento ||
+    (mesAtual === mesNascimento && diaAtual < diaNascimento)
+  ) {
+    idade--;
   }
+  return idade;
+}
 
-  const navigate = useNavigate()
+function normalizarTexto(texto: string) {
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase();
+}
 
-  function calcularIdade(dataDeNascimento: string) {
-    const hoje = new Date();
-    const nascimento = new Date(dataDeNascimento);
-    let idade = hoje.getFullYear() - nascimento.getFullYear();
-
-    const mesAtual = hoje.getMonth();
-    const diaAtual = hoje.getDate();
-
-    const mesNascimento = nascimento.getMonth();
-    const diaNascimento = nascimento.getDate();
-
-    if (
-      mesAtual < mesNascimento ||
-      (mesAtual === mesNascimento && diaAtual < diaNascimento)
-    ) {
-      idade--;
-    }
-    return idade;
-  }
+export default function PacientesPage() {
+  const navigate = useNavigate();
 
   const { IdUser } = useUser();
   const [totalPacientes, setTotalPacientes] = useState(0);
@@ -46,43 +57,38 @@ export default function Pacientes() {
   const [menuAberto, setMenuAberto] = useState<number | null>(null);
   const [confirmarAlta, setConfirmarAlta] = useState<Pacientes | null>(null);
   const [processando, setProcessando] = useState(false);
-  const [buscaDePacientes, setBuscaDePacientes] = useState("")
-  
+  const [buscaDePacientes, setBuscaDePacientes] = useState("");
 
-  const ALTURA_ESTIMADA_MENU = 320
-  const LARGURA_MENU = 240
+  const [menuPos, setMenuPos] = useState<{
+    top?: number;
+    bottom?: number;
+    left: number;
+  } | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
-const [menuPos, setMenuPos] = useState<{
-  top?: number;
-  bottom?: number;
-  left: number;
-} | null>(null);
-const menuRef = useRef<HTMLDivElement | null>(null);
+  const pacienteDoMenu = pacientes.find((p) => p.id === menuAberto) ?? null;
 
-const pacienteDoMenu = pacientes.find((p) => p.id === menuAberto) ?? null;
+  function abrirMenu(e: React.MouseEvent<HTMLButtonElement>, id: number) {
+    if (menuAberto === id) {
+      setMenuAberto(null);
+      return;
+    }
 
-function abrirMenu(e: React.MouseEvent<HTMLButtonElement>, id: number) {
-  if (menuAberto === id) {
-    setMenuAberto(null);
-    return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const espacoAbaixo = window.innerHeight - rect.bottom;
+    const espacoAcima = rect.top;
+    const abrirParaCima =
+      espacoAbaixo < ALTURA_ESTIMADA_MENU && espacoAcima > espacoAbaixo;
+
+    const left = Math.max(8, rect.right - LARGURA_MENU);
+
+    setMenuPos(
+      abrirParaCima
+        ? { bottom: window.innerHeight - rect.top + 8, left }
+        : { top: rect.bottom + 8, left },
+    );
+    setMenuAberto(id);
   }
-
-  const rect = e.currentTarget.getBoundingClientRect();
-  const espacoAbaixo = window.innerHeight - rect.bottom;
-  const espacoAcima = rect.top;
-  const abrirParaCima =
-    espacoAbaixo < ALTURA_ESTIMADA_MENU && espacoAcima > espacoAbaixo;
-
-  
-  const left = Math.max(8, rect.right - LARGURA_MENU);
-
-  setMenuPos(
-    abrirParaCima
-      ? { bottom: window.innerHeight - rect.top + 8, left }
-      : { top: rect.bottom + 8, left },
-  );
-  setMenuAberto(id);
-}
 
   useEffect(() => {
     async function carregarPacientes() {
@@ -186,399 +192,482 @@ function abrirMenu(e: React.MouseEvent<HTMLButtonElement>, id: number) {
   }
 
   useEffect(() => {
-  if (menuAberto === null) return;
+    if (menuAberto === null) return;
 
-  const fechar = () => setMenuAberto(null);
+    const fechar = () => setMenuAberto(null);
 
-  function aoClicarFora(e: MouseEvent) {
-    const alvo = e.target as HTMLElement;
-    if (menuRef.current?.contains(alvo)) return;
-    if (alvo.closest("[data-menu-trigger]")) return;
-    setMenuAberto(null);
-  }
+    function aoClicarFora(e: MouseEvent) {
+      const alvo = e.target as HTMLElement;
+      if (menuRef.current?.contains(alvo)) return;
+      if (alvo.closest("[data-menu-trigger]")) return;
+      setMenuAberto(null);
+    }
 
-  function aoApertarTecla(e: KeyboardEvent) {
-    if (e.key === "Escape") setMenuAberto(null);
-  }
+    function aoApertarTecla(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuAberto(null);
+    }
 
-  window.addEventListener("resize", fechar);
-  window.addEventListener("scroll", fechar, true); // true = captura scroll de qualquer container
-  document.addEventListener("mousedown", aoClicarFora);
-  document.addEventListener("keydown", aoApertarTecla);
+    window.addEventListener("resize", fechar);
+    window.addEventListener("scroll", fechar, true); // true = captura scroll de qualquer container
+    document.addEventListener("mousedown", aoClicarFora);
+    document.addEventListener("keydown", aoApertarTecla);
 
-  return () => {
-    window.removeEventListener("resize", fechar);
-    window.removeEventListener("scroll", fechar, true);
-    document.removeEventListener("mousedown", aoClicarFora);
-    document.removeEventListener("keydown", aoApertarTecla);
-  };
-}, [menuAberto]);
+    return () => {
+      window.removeEventListener("resize", fechar);
+      window.removeEventListener("scroll", fechar, true);
+      document.removeEventListener("mousedown", aoClicarFora);
+      document.removeEventListener("keydown", aoApertarTecla);
+    };
+  }, [menuAberto]);
 
-function normalizarTexto(texto: string){
-  return texto
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLocaleLowerCase();
-}
+  const pacientesFiltrados = pacientes.filter((paciente) => {
+    const termo = normalizarTexto(buscaDePacientes.trim());
+    const nomeCompleto = `${paciente.nome_paciente ?? ""} ${paciente.sobrenome_paciente ?? ""}`;
+    return normalizarTexto(nomeCompleto).includes(termo);
+  });
 
-const pacientesFiltrados = pacientes.filter((paciente)=>{
-  const termo = normalizarTexto(buscaDePacientes)
-  return normalizarTexto(paciente.nome_paciente).includes(termo)
-})
+  const itemMenu =
+    "flex w-full items-center gap-3 px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-emerald-50 focus:outline-none focus-visible:bg-emerald-50";
 
   return (
-    <div className="h-screen overflow-hidden flex flex-row">
+    <div className="flex h-screen flex-row overflow-hidden">
       <Menu />
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-emerald-100/60 to-transparent pointer-events-none"></div>
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p12 z-10 scroll-smooth">
-          <div className="max-w-7xl mx-auto flex flex-col gap-8">
-            <nav className="flex items-center text-sm font-medium">
+      <main className="relative flex h-full flex-1 flex-col overflow-hidden">
+        <div className="pointer-events-none absolute left-0 top-0 h-64 w-full bg-gradient-to-b from-emerald-100/60 to-transparent"></div>
+        <div className="z-10 flex-1 scroll-smooth overflow-y-auto p-4 md:p-8 lg:p-12">
+          <div className="mx-auto flex max-w-7xl flex-col gap-8">
+            {/* Breadcrumb */}
+            <nav
+              className="flex items-center text-sm font-medium"
+              aria-label="Você está em"
+            >
               <Link
                 to="/dashboard"
-                className="transition-colors hover: text-primary"
+                className="text-gray-500 transition-colors hover:text-primary-dark"
               >
                 Painel
               </Link>
-              <span className="mx-2 text-gray-400">/</span>
-              <span>Pacientes</span>
+              <span className="material-symbols-outlined mx-1 text-base text-gray-400">
+                chevron_right
+              </span>
+              <span className="font-semibold">Pacientes</span>
             </nav>
-            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+
+            {/* Cabeçalho */}
+            <header className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
               <div className="flex flex-col gap-2">
-                <h2 className="text-3xl md:text-4xl font-black tracking-tight">
+                <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
                   Lista de pacientes
                 </h2>
-                <p className="text-base max-w-xl">
+                <p className="max-w-xl text-gray-600">
                   Gerencie seus pacientes, acompanhe evoluções clínicas e agende
                   consultas com eficiência.
                 </p>
               </div>
-              <div className="hidden lg:flex gap-6">
-                <div className="flex flex-col items-end px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-100">
-                  <span className="text-xs font-semibold uppercase tracking-wider">
-                    Total de pacientes
-                  </span>
-                  <span className="text-2xl font-bold">{totalPacientes}</span>
+              <div className="flex gap-4">
+                <div className="flex items-center gap-3 rounded-2xl bg-white px-5 py-3 shadow-sm ring-1 ring-black/5">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+                    <span className="material-symbols-outlined">
+                      diversity_1
+                    </span>
+                  </div>
+                  <div className="flex flex-col leading-tight">
+                    <span className="text-xs font-medium text-gray-500">
+                      Total de pacientes
+                    </span>
+                    <span className="text-2xl font-bold tabular-nums">
+                      {totalPacientes}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col items-end px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-100">
-                  <span className="text-xs font-semibold uppercase tracking-wider">
-                    Ativos hoje
-                  </span>
-                  <span className="text-2xl font-bold text-primary">
-                    {pacientesAtivos}
-                  </span>
+                <div className="flex items-center gap-3 rounded-2xl bg-white px-5 py-3 shadow-sm ring-1 ring-black/5">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary-dark">
+                    <span className="material-symbols-outlined">
+                      health_and_safety
+                    </span>
+                  </div>
+                  <div className="flex flex-col leading-tight">
+                    <span className="text-xs font-medium text-gray-500">
+                      Em tratamento
+                    </span>
+                    <span className="text-2xl font-bold tabular-nums text-primary-dark">
+                      {pacientesAtivos}
+                    </span>
+                  </div>
                 </div>
               </div>
             </header>
-            <div className="p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+
+            {/* Busca e ações */}
+            <div className="flex flex-col items-center justify-between gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 md:flex-row">
               <div className="relative w-full md:w-96">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="material-symbols-outlined transition-colors">
-                    search
-                  </span>
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                  <span className="material-symbols-outlined">search</span>
                 </div>
-                <input onChange={(e)=>setBuscaDePacientes(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border-none ring-1 ring-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:outline-none transition-shadow"
+                <input
+                  value={buscaDePacientes}
+                  onChange={(e) => setBuscaDePacientes(e.target.value)}
+                  aria-label="Buscar paciente"
+                  className="block w-full rounded-xl border-none bg-gray-50 py-3 pl-10 pr-3 text-sm ring-1 ring-gray-200 transition focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="Buscar paciente..."
                   type="text"
                 />
               </div>
-              <div className="flex w-full md:w-auto gap-3">
-                <button className="flex items-center justify-center px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                  <span className="material-symbols-outlined">filter_list</span>
+              <div className="flex w-full gap-3 md:w-auto">
+                <button className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+                  <span className="material-symbols-outlined text-xl">
+                    filter_list
+                  </span>
                   Filtrar
                 </button>
                 <Link
                   to="/registro"
-                  className="flex-1 md:flex-none items-center justify-center px-6 py-3 rounded-lg bg-primary text-black font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all flex gap-2 min-w-[180px]"
+                  className="flex min-w-[180px] flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:bg-primary-dark hover:shadow-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 md:flex-none"
                 >
-                  <span className="material-symbols-outlined">add</span>
+                  <span className="material-symbols-outlined text-xl">add</span>
                   Novo paciente
                 </Link>
               </div>
             </div>
-            <div className="rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[500px]">
+
+            {/* Tabela */}
+            <div className="flex min-h-[500px] flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full border-collapse text-left">
                   <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50/50">
-                      <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider w-16">
-                        <input
-                          className="rounded border-gray-300 text-primary focus:rong-primary bg-transparent"
-                          type="checkbox"
-                        />
+                    <tr className="border-b border-gray-100 bg-gray-50/70 text-sm text-gray-500">
+                      <th className="px-6 py-4 font-semibold">Nome</th>
+                      <th className="px-6 py-4 font-semibold">Idade / Gênero</th>
+                      <th className="px-6 py-4 font-semibold">
+                        Última evolução
                       </th>
-                      <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider ">
-                        Nome
-                      </th>
-                      <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider ">
-                        Idade/ Gênero
-                      </th>
-                      <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider ">
-                        Ultima evolução
-                      </th>
-                      <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider ">
-                        Status
-                      </th>
-                      <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider  text-right">
+                      <th className="px-6 py-4 font-semibold">Status</th>
+                      <th className="px-6 py-4 text-right font-semibold">
                         Ações
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {pacientesFiltrados.map((paciente) => (
-                      <tr
-                        key={paciente.id}
-                        className="hover:bg-primary/5 transition-colors cursor-pointer"
-                      >
-                        <td className="py-4 px-6 align-middle">
-                          <input
-                            className="rounded border-gray-300 text-primary focus:ring-primary bg-transparent"
-                            type="checkbox"
-                          />
-                        </td>
+                    {pacientesFiltrados.map((paciente) => {
+                      const idade = calcularIdade(paciente.data_nascimento);
+                      const ativo = paciente.status === "Tratamento ativo";
 
-                        <td className="py-4 px-6 align-middle">
-                          <div className="flex items-center gap-3">
-                            <img
-                              className="size-10 rounded-full object-cover bg-gray-200"
-                              src={`https://api.dicebear.com/10.x/personas/svg?seed=${paciente.id}`}
-                              alt={paciente.nome_paciente}
-                            />
+                      return (
+                        <tr
+                          key={paciente.id}
+                          className="cursor-pointer transition-colors hover:bg-primary/5"
+                        >
+                          
 
-                            <div className="flex flex-col">
-                              <span className="font-bold text-base">
-                                {paciente.nome_paciente}{" "}
-                                {paciente.sobrenome_paciente}
+                          <td className="px-6 py-4 align-middle">
+                            <div className="flex items-center gap-3">
+                              <img
+                                className="size-11 rounded-full bg-gray-100 object-cover ring-2 ring-white"
+                                src={`https://api.dicebear.com/10.x/personas/svg?seed=${paciente.id}`}
+                                alt=""
+                              />
+
+                              <div className="flex flex-col leading-tight">
+                                <span className="text-base font-bold">
+                                  {paciente.nome_paciente}{" "}
+                                  {paciente.sobrenome_paciente}
+                                </span>
+
+                                <span className="text-xs text-gray-400 tabular-nums">
+                                  ID #{paciente.id}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="px-6 py-4 align-middle">
+                            <div className="text-sm font-medium">
+                              {idade !== null
+                                ? `${idade} anos`
+                                : "Não informado"}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {paciente.genero || "Não informado"}
+                            </div>
+                          </td>
+
+                          <td className="px-6 py-4 align-middle">
+                            <div className="flex items-center gap-2 text-gray-600">
+                              <span className="material-symbols-outlined text-base">
+                                person
                               </span>
-
-                              <span className="text-xs text-primary/90">
-                                ID: #{paciente.id}
+                              <span className="text-sm font-medium">
+                                Paciente cadastrado
                               </span>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td className="py-4 px-6 align-middle">
-                          <div className="text-sm">
-                            {`${calcularIdade(paciente.data_nascimento)} anos` ||
-                              "Não informado"}
-                          </div>
-                          <div className="text-xs">
-                            {paciente.genero || "Não informado"}
-                          </div>
-                        </td>
-
-                        <td className="py-4 px-6 align-middle">
-                          <div className="flex items-center gap-2">
-                            <span className="material-symbols-outlined text-sm">
-                              person
-                            </span>
-
-                            <span className="text-sm font-medium">
-                              Paciente cadastrado
-                            </span>
-                          </div>
-                        </td>
-
-                        <td className="py-4 px-6 align-middle">
-                          <span
-                            className={`${paciente.status === "Tratamento ativo" ? "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800" : "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600"} `}
-                          >
+                          <td className="px-6 py-4 align-middle">
                             <span
-                              className={`${paciente.status === "Tratamento ativo" ? "w-1.5 h-1.5 rounded-full bg-green-600" : "w-1.5 h-1.5 rounded-full bg-gray-500"} `}
-                            />
-                            <span className="" />
-                            {paciente.status}
-                          </span>
-                        </td>
+                              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+                                ativo
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-gray-100 text-gray-600"
+                              }`}
+                            >
+                              <span
+                                className={`h-1.5 w-1.5 rounded-full ${
+                                  ativo ? "bg-green-600" : "bg-gray-500"
+                                }`}
+                              />
+                              {paciente.status}
+                            </span>
+                          </td>
 
-                        <td className="py-4 px-6 align-middle text-right">
-  <button
-    type="button"
-    data-menu-trigger
-    aria-label={`Ações de ${paciente.nome_paciente}`}
-    aria-expanded={menuAberto === paciente.id}
-    onClick={(e) => abrirMenu(e, paciente.id)}
-    className={`rounded-full p-2 transition-colors ${
-      menuAberto === paciente.id
-        ? "bg-emerald-100 text-emerald-700"
-        : "text-gray-400 hover:bg-gray-100 hover:text-primary"
-    }`}
-  >
-    <span className="material-symbols-outlined">more_vert</span>
-  </button>
-</td>
-                      </tr>
-                    ))}
+                          <td className="px-6 py-4 text-right align-middle">
+                            <button
+                              type="button"
+                              data-menu-trigger
+                              aria-label={`Ações de ${paciente.nome_paciente}`}
+                              aria-expanded={menuAberto === paciente.id}
+                              onClick={(e) => abrirMenu(e, paciente.id)}
+                              className={`rounded-full p-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                                menuAberto === paciente.id
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : "text-gray-400 hover:bg-gray-100 hover:text-primary"
+                              }`}
+                            >
+                              <span className="material-symbols-outlined">
+                                more_vert
+                              </span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
 
-                
-
-{confirmarAlta && (
-  <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 p-4">
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
-    >
-      <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-        <span className="material-symbols-outlined text-2xl">
-          check_circle
-        </span>
-      </div>
-
-      <h3 className="text-xl font-bold text-gray-900">
-        Dar alta ao paciente?
-      </h3>
-
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        Deseja realmente dar alta a{" "}
-        <strong>
-          {confirmarAlta.nome_paciente}{" "}
-          {confirmarAlta.sobrenome_paciente}
-        </strong>
-        ? O status será alterado para Alta.
-      </p>
-
-      <div className="mt-6 flex justify-end gap-3">
-        <button
-          type="button"
-          disabled={processando}
-          onClick={() => setConfirmarAlta(null)}
-          className="rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-        >
-          Cancelar
-        </button>
-
-        <button
-          type="button"
-          disabled={processando}
-          onClick={darAlta}
-          className="rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
-        >
-          {processando ? "Processando..." : "Confirmar alta"}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-
+                {pacientesFiltrados.length === 0 && (
+                  <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary-dark">
+                      <span className="material-symbols-outlined">
+                        {buscaDePacientes ? "search_off" : "group"}
+                      </span>
+                    </div>
+                    <p className="font-semibold">
+                      {buscaDePacientes
+                        ? "Nenhum paciente encontrado"
+                        : "Você ainda não tem pacientes"}
+                    </p>
+                    <p className="max-w-xs text-sm text-gray-500">
+                      {buscaDePacientes
+                        ? "Confira se o nome está certo ou tente buscar só pelo primeiro nome."
+                        : "Cadastre seu primeiro paciente para começar."}
+                    </p>
+                  </div>
+                )}
               </div>
-              <div className="mt-auto border-t border-gray-100 px-6 py-4 flex flex-col md:flex-row items-center justify-center gap-4">
-                <p className="text-sm">
-                  Mostrando <span className="font-medium">1-5</span> de{" "}
-                  <span className="font-medium">{totalPacientes}</span>{" "}
+
+              <div className="mt-auto flex flex-col items-center justify-between gap-4 border-t border-gray-100 px-6 py-4 md:flex-row">
+                <p className="text-sm text-gray-600">
+                  Mostrando{" "}
+                  <span className="font-semibold">
+                    {pacientesFiltrados.length}
+                  </span>{" "}
+                  de <span className="font-semibold">{totalPacientes}</span>{" "}
                   pacientes
                 </p>
                 <div className="flex gap-2">
-                  <button className="px-4 py-2 text-sm font-medium bg-transparent border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50">
+                  <button
+                    disabled
+                    className="rounded-lg border border-gray-200 bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50"
+                  >
                     Anterior
                   </button>
-                  <button className="px-4 py-2 text-sm font-medium bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50">
+                  <button
+                    disabled
+                    className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50"
+                  >
                     Próximo
                   </button>
                 </div>
               </div>
             </div>
+
             <div className="flex justify-center pb-8 pt-4">
-              <p className="text-xs text-center text-primary">
+              <p className="text-center text-xs text-gray-500">
                 © 2026 FisioHub. Todos os direitos reservados. <br />
-                Informações Confidenciais do Paciente.
+                Informações confidenciais do paciente.
               </p>
             </div>
           </div>
         </div>
       </main>
-      {menuAberto !== null &&
-  pacienteDoMenu &&
-  menuPos &&
-  createPortal(
-    <div
-      ref={menuRef}
-      role="menu"
-      style={{
-        position: "fixed",
-        top: menuPos.top,
-        bottom: menuPos.bottom,
-        left: menuPos.left,
-        width: LARGURA_MENU,
-      }}
-      className="z-[1000] overflow-hidden rounded-xl border border-gray-100 bg-white py-2 text-left shadow-xl"
-    >
-      <div className="border-b border-gray-100 px-4 py-3">
-        <p className="text-xs text-gray-400">AÇÕES DO PACIENTE</p>
-        <p className="mt-1 truncate text-sm font-bold text-gray-800">
-          {pacienteDoMenu.nome_paciente} {pacienteDoMenu.sobrenome_paciente}
-        </p>
-      </div>
 
-      <button
-        onClick={() => {
-          setMenuAberto(null);
-          console.log("Prontuário:", pacienteDoMenu.id);
-        }}
-        className="flex w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50"
-      >
-        <span className="material-symbols-outlined text-xl">folder_open</span>
-        Ver prontuário
-      </button>
-
-      <button
-      type="button"
-        onClick={() => {
-          navigate("/novaevolucao",{
-            state:{
-              idPaciente:pacienteDoMenu.id
-            }
-          })
-          setMenuAberto(null)
-        }}
-        className="flex w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50"
-      >
-        <span className="material-symbols-outlined text-xl">clinical_notes</span>
-        Registrar evolução
-      </button>
-
-      <button
-        onClick={() => {
-          setMenuAberto(null);
-          console.log("Editar cadastro:", pacienteDoMenu.id);
-        }}
-        className="flex w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50"
-      >
-        <span className="material-symbols-outlined text-xl">edit</span>
-        Editar cadastro
-      </button>
-
-      <div className="my-2 border-t border-gray-100" />
-
-      {pacienteDoMenu.status === "Tratamento ativo" ? (
-        <button
-          onClick={() => {
-            setMenuAberto(null);
-            setConfirmarAlta(pacienteDoMenu);
+      {/* Modal de alta */}
+      {confirmarAlta && (
+        <div
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !processando)
+              setConfirmarAlta(null);
           }}
-          className="flex w-full items-center gap-3 px-4 py-3 text-sm text-emerald-700 hover:bg-emerald-50"
         >
-          <span className="material-symbols-outlined text-xl">check_circle</span>
-          Dar alta ao paciente
-        </button>
-      ) : pacienteDoMenu.status === "Alta" ? (
-        <button
-          onClick={() => reativarPaciente(pacienteDoMenu)}
-          className="flex w-full items-center gap-3 px-4 py-3 text-sm text-blue-700 hover:bg-blue-50"
-        >
-          <span className="material-symbols-outlined text-xl">restart_alt</span>
-          Reativar tratamento
-        </button>
-      ) : null}
-    </div>,
-    document.body,
-  )}
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titulo-alta"
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+          >
+            <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+              <span className="material-symbols-outlined text-2xl">
+                check_circle
+              </span>
+            </div>
+
+            <h3 id="titulo-alta" className="text-xl font-bold text-gray-900">
+              Dar alta ao paciente?
+            </h3>
+
+            <p className="mt-2 text-sm leading-relaxed text-gray-600">
+              Deseja realmente dar alta a{" "}
+              <strong>
+                {confirmarAlta.nome_paciente} {confirmarAlta.sobrenome_paciente}
+              </strong>
+              ? O status será alterado para Alta.
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                disabled={processando}
+                onClick={() => setConfirmarAlta(null)}
+                className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                disabled={processando}
+                onClick={darAlta}
+                className="rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 disabled:opacity-50"
+              >
+                {processando ? "Processando..." : "Confirmar alta"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Menu de ações */}
+      {menuAberto !== null &&
+        pacienteDoMenu &&
+        menuPos &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            style={{
+              position: "fixed",
+              top: menuPos.top,
+              bottom: menuPos.bottom,
+              left: menuPos.left,
+              width: LARGURA_MENU,
+            }}
+            className="z-[1000] overflow-hidden rounded-2xl bg-white py-2 text-left shadow-xl ring-1 ring-black/5"
+          >
+            <div className="border-b border-gray-100 px-4 py-3">
+              <p className="text-xs text-gray-400">Ações do paciente</p>
+              <p className="mt-0.5 truncate text-sm font-bold text-gray-800">
+                {pacienteDoMenu.nome_paciente}{" "}
+                {pacienteDoMenu.sobrenome_paciente}
+              </p>
+            </div>
+
+            <div className="py-1">
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setMenuAberto(null);
+                  navigate(`/pacientes/${pacienteDoMenu.id}`)
+                }}
+                className={itemMenu}
+              >
+                <span className="material-symbols-outlined text-xl text-gray-500">
+                  folder_open
+                </span>
+                Ver prontuário
+              </button>
+
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  navigate("/novaevolucao", {
+                    state: {
+                      idPaciente: pacienteDoMenu.id,
+                    },
+                  });
+                  setMenuAberto(null);
+                }}
+                className={itemMenu}
+              >
+                <span className="material-symbols-outlined text-xl text-gray-500">
+                  clinical_notes
+                </span>
+                Registrar evolução
+              </button>
+
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setMenuAberto(null);
+                  console.log("Editar cadastro:", pacienteDoMenu.id);
+                }}
+                className={itemMenu}
+              >
+                <span className="material-symbols-outlined text-xl text-gray-500">
+                  edit
+                </span>
+                Editar cadastro
+              </button>
+            </div>
+
+            {(pacienteDoMenu.status === "Tratamento ativo" ||
+              pacienteDoMenu.status === "Alta") && (
+              <div className="border-t border-gray-100 pt-1">
+                {pacienteDoMenu.status === "Tratamento ativo" ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuAberto(null);
+                      setConfirmarAlta(pacienteDoMenu);
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-50 focus:outline-none focus-visible:bg-emerald-50"
+                  >
+                    <span className="material-symbols-outlined text-xl">
+                      check_circle
+                    </span>
+                    Dar alta ao paciente
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => reativarPaciente(pacienteDoMenu)}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50 focus:outline-none focus-visible:bg-blue-50"
+                  >
+                    <span className="material-symbols-outlined text-xl">
+                      restart_alt
+                    </span>
+                    Reativar tratamento
+                  </button>
+                )}
+              </div>
+            )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
- 

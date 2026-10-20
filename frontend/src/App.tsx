@@ -13,6 +13,7 @@ import Evolucoes from "./pages/Evolucoes";
 import NovaEvolucao from "./pages/NovaEvolucao";
 import NovoAgendamento from "./pages/NovoAgendamento";
 
+
 export default function App() {
   const [titulo, setTitulo] = useState("");
   const [sobrenome, setSobrenome] = useState("");
@@ -64,7 +65,7 @@ export default function App() {
         />
         <Route path="/pacientes" element={<Pacientes />} />
         <Route path="/registro" element={<Registro IdUser={IdUser} />} />
-        <Route path="/fichapaciente" element={<FichaPaciente />} />
+        <Route path="/pacientes/:id" element={<FichaPaciente />} />
         <Route path="/agenda" element={<Agenda />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/evolucoes" element={<Evolucoes />} />

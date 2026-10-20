@@ -18,15 +18,29 @@ interface Evolucoes {
   created_at: string;
 }
 
+const PACIENTES_POR_PAGINA = 10;
+
+function normalizarTexto(texto: string) {
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase();
+}
+
+function iniciais(nome?: string | null) {
+  const partes = (nome ?? "").trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return "?";
+  if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+  return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+}
+
 export default function Evolucoes() {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [paginaAtual, setPaginaAtual] = useState(1);
-  const {IdUser} = useUser()
-
-  const pacientesPorPagina = 10;
+  const { IdUser } = useUser();
 
   useEffect(() => {
     async function buscarPacientes() {
@@ -37,13 +51,14 @@ export default function Evolucoes() {
         .from("pacientes")
         .select(
           `id,nome_paciente,id_user,evolucoes(id,paciente_id,patologia,texto,created_at)`,
-        ).eq("id_user",IdUser);
+        )
+        .eq("id_user", IdUser);
 
       if (error) {
         console.error("Error ao buscar pacientes:", error);
-        setErro("Não foi possivel carregar os pacientes.");
+        setErro("Não foi possível carregar os pacientes.");
       } else {
-        setPacientes(data??[]);
+        setPacientes(data ?? []);
       }
 
       setLoading(false);
@@ -52,93 +67,130 @@ export default function Evolucoes() {
     buscarPacientes();
   }, [IdUser]);
 
-  //Busqueda sem acentos
-  function normalizarTexto(texto: string) {
-    return texto
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLocaleLowerCase();
-  }
-
-  //Busqueda
+  // Busca sem acentos
   const pacientesFiltrados = pacientes.filter((paciente) => {
-    const termo = normalizarTexto(busca);
-    return normalizarTexto(paciente.nome_paciente).includes(termo);
+    const termo = normalizarTexto(busca.trim());
+    return normalizarTexto(paciente.nome_paciente ?? "").includes(termo);
   });
 
-
-  // Paginación de lista de pacientes
+  // Paginação da lista de pacientes
   const totalPacientes = pacientesFiltrados.length;
+  const totalPaginas = Math.ceil(totalPacientes / PACIENTES_POR_PAGINA);
+  const indiceInicial = (paginaAtual - 1) * PACIENTES_POR_PAGINA;
+  const indiceFinal = indiceInicial + PACIENTES_POR_PAGINA;
 
-  const totalPaginas = Math.ceil(totalPacientes/pacientesPorPagina)
-  const indiceInicial = (paginaAtual-1)*pacientesPorPagina;
-  const indiceFinal = indiceInicial+pacientesPorPagina;
+  const pacientesPagina = pacientesFiltrados.slice(indiceInicial, indiceFinal);
 
-  const pacientesPagina = pacientesFiltrados.slice(indiceInicial,indiceFinal)
+  const botaoPagina =
+    "flex size-10 items-center justify-center rounded-xl border border-gray-200 bg-white transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-40";
 
   return (
-    <div className="h-screen overflow-hidden flex flex-row">
+    <div className="flex h-screen flex-row overflow-hidden">
       <Menu />
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-emerald-100/60 to-transparent pointer-events-none"></div>
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p12 z-10 scroll-smooth">
-          <div className="max-w-7xl mx-auto flex flex-col gap-2">
-            <nav className="flex items-center text-sm font-medium">
+      <main className="relative flex h-full flex-1 flex-col overflow-hidden">
+        <div className="pointer-events-none absolute left-0 top-0 h-64 w-full bg-gradient-to-b from-emerald-100/60 to-transparent"></div>
+        <div className="z-10 flex-1 scroll-smooth overflow-y-auto p-4 md:p-8 lg:p-12">
+          <div className="mx-auto flex max-w-7xl flex-col gap-8">
+            {/* Breadcrumb */}
+            <nav
+              className="flex items-center text-sm font-medium"
+              aria-label="Você está em"
+            >
               <Link
                 to="/dashboard"
-                className="transition-colors hover: text-primary"
+                className="text-gray-500 transition-colors hover:text-primary-dark"
               >
                 Painel
               </Link>
-              <span className="mx-2 text-gray-400">/</span>
-              <span>Evoluçoes</span>
+              <span className="material-symbols-outlined mx-1 text-base text-gray-400">
+                chevron_right
+              </span>
+              <span className="font-semibold">Evoluções</span>
             </nav>
-            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 ">
-              <div className="flex flex-col gap-2 ">
-                <h2 className="text-3xl md:text-4xl font-black ">
-                  Historico de evoluçoes
-                </h2>
-              </div>
+
+            {/* Cabeçalho */}
+            <header className="flex flex-col gap-2">
+              <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+                Histórico de evoluções
+              </h2>
+              <p className="max-w-xl text-gray-600">
+                Acompanhe a última evolução de cada paciente e abra o prontuário
+                completo.
+              </p>
             </header>
-            <div className="p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+
+            {/* Busca e ação */}
+            <div className="flex flex-col items-center justify-between gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 md:flex-row">
               <div className="relative w-full md:w-96">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="material-symbols-outlined transition-colors">
-                    search
-                  </span>
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                  <span className="material-symbols-outlined">search</span>
                 </div>
                 <input
                   value={busca}
-                  onChange={(e) => {setBusca(e.target.value);
-                    setPaginaAtual(1)
+                  onChange={(e) => {
+                    setBusca(e.target.value);
+                    setPaginaAtual(1);
                   }}
-                  className="block w-full pl-10 pr-3 py-3 border-none ring-1 ring-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:outline-none transition-shadow"
+                  aria-label="Buscar paciente"
+                  className="block w-full rounded-xl border-none bg-gray-50 py-3 pl-10 pr-3 text-sm ring-1 ring-gray-200 transition focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="Buscar paciente..."
                   type="text"
                 />
               </div>
-              <div className="flex w-full md:w-auto gap-3">
+              <div className="flex w-full gap-3 md:w-auto">
                 <Link
                   to="/novaevolucao"
-                  className="flex-1 md:flex-none items-center justify-center px-6 py-3 rounded-lg bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all flex gap-2 min-w-[180px]"
+                  className="flex min-w-[180px] flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:bg-primary-dark hover:shadow-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 md:flex-none"
                 >
-                  <span className="material-symbols-outlined">add</span>
-                  Nova Evoluçao
+                  <span className="material-symbols-outlined text-xl">add</span>
+                  Nova evolução
                 </Link>
               </div>
             </div>
-            <div className="flex flex-col gap-2">
+
+            {/* Lista */}
+            <div className="flex flex-col gap-3">
               {loading && (
-                <p className="text-center py-8 text-gray-500">
-                  Carregando pacientes...
-                </p>
+                <div className="flex flex-col gap-3" aria-busy="true">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="h-28 animate-pulse rounded-2xl bg-white shadow-sm ring-1 ring-black/5"
+                    />
+                  ))}
+                </div>
               )}
-              {erro && <p className="text-center py-8 text-red-500">{erro}</p>}
+
+              {erro && (
+                <div
+                  role="alert"
+                  className="flex items-center gap-3 rounded-2xl bg-red-50 px-5 py-4 text-sm font-medium text-red-600 ring-1 ring-red-100"
+                >
+                  <span className="material-symbols-outlined">error</span>
+                  {erro}
+                </div>
+              )}
+
               {!loading && !erro && pacientesFiltrados.length === 0 && (
-                <p className="text-center py-8 text-gray-500">
-                  Nenhum paciente encontrado
-                </p>
+                <div className="flex flex-col items-center gap-3 rounded-2xl bg-white px-6 py-16 text-center shadow-sm ring-1 ring-black/5">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary-dark">
+                    <span className="material-symbols-outlined">
+                      {busca ? "search_off" : "clinical_notes"}
+                    </span>
+                  </div>
+                  <p className="font-semibold">
+                    {busca
+                      ? "Nenhum paciente encontrado"
+                      : "Nenhum paciente cadastrado"}
+                  </p>
+                  <p className="max-w-xs text-sm text-gray-500">
+                    {busca
+                      ? "Confira se o nome está certo ou tente buscar só pelo primeiro nome."
+                      : "Cadastre um paciente para começar a registrar evoluções."}
+                  </p>
+                </div>
               )}
+
               {!loading &&
                 !erro &&
                 pacientesPagina.map((paciente) => {
@@ -147,81 +199,102 @@ export default function Evolucoes() {
                       new Date(b.created_at).getTime() -
                       new Date(a.created_at).getTime(),
                   )[0];
+                  const quantidade = paciente.evolucoes.length;
+
                   return (
-                    <figure
+                    <article
                       key={paciente.id}
-                      className="bg-white px-6 py-4 border border-primary/35 hover:translate-x-1 hover:-translate-y-1 rounded-xl flex justify-between items-center transition-all hover:shadow-md duration-200"
+                      className="flex flex-col gap-5 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-md md:flex-row md:items-center md:gap-6 md:p-6"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="size-12 rounded-full bg-primary flex items-center justify-center font-bold">
-                          {paciente.nome_paciente
-                            ?.split("")
-                            .splice(0, 2)
-                            .map((nome) => nome[0])
-                            .join("")
-                            .toUpperCase()}
+                      {/* Paciente */}
+                      <div className="flex items-center gap-4 md:w-1/3">
+                        <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-white">
+                          {iniciais(paciente.nome_paciente)}
                         </div>
-                        <div>
-                          <h3 className="text-[20px] font-bold text-primary leading-tight">
+                        <div className="min-w-0">
+                          <h3 className="truncate text-lg font-bold leading-tight">
                             {paciente.nome_paciente}
                           </h3>
-                          <p className="text-sm text-on-surface-variant">
-                            Prontuario: #{paciente.id}
-                            <p className="text-gray-400">Patologia</p>
-                            <p>
-                              {ultimaEvolucao?.patologia ?? "Não informado"}
-                            </p>
+                          <p className="text-xs text-gray-400 tabular-nums">
+                            Prontuário #{paciente.id}
+                          </p>
+                          <p className="mt-1.5 truncate text-sm text-gray-600">
+                            <span className="text-gray-400">Patologia: </span>
+                            {ultimaEvolucao?.patologia ?? "Não informado"}
                           </p>
                         </div>
                       </div>
-                      <div className="w-2/4">
-                        <p>Última evolução</p>
-                        <p className="text-primary font-bold text-lg">
+
+                      {/* Última evolução */}
+                      <div className="min-w-0 flex-1 border-gray-100 md:border-l md:pl-6">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm text-gray-500">
+                            Última evolução
+                          </p>
+                          <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary-dark">
+                            {quantidade === 1
+                              ? "1 registro"
+                              : `${quantidade} registros`}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-lg font-bold text-primary-dark">
                           {ultimaEvolucao
                             ? new Date(
                                 ultimaEvolucao.created_at,
                               ).toLocaleDateString("pt-BR")
                             : "Nenhuma evolução"}
                         </p>
-                        <p>{ultimaEvolucao?.texto ?? "Não informado"}</p>
+                        <p className="mt-1 line-clamp-2 text-sm text-gray-600">
+                          {ultimaEvolucao?.texto ?? "Não informado"}
+                        </p>
                       </div>
 
+                      {/* Ação */}
                       <Link
                         to={`/pacientes/${paciente.id}`}
-                        className="text-primary hover:bg-status-info-bg px-3 py-1.5 rounded-lg text-sm transition-colors border border-primary hover:bg-primary hover:text-white"
+                        className="flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-primary px-4 py-2.5 text-sm font-semibold text-primary-dark transition-colors hover:bg-primary hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
                       >
-                        Ver Prontuario completo
+                        Ver prontuário completo
+                        <span className="material-symbols-outlined text-base">
+                          arrow_forward
+                        </span>
                       </Link>
-                    </figure>
+                    </article>
                   );
                 })}
             </div>
-            {!loading&&!erro&& totalPacientes>0&&(
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4">
-                <p className="text-sm text-gray-500">
+
+            {/* Paginação */}
+            {!loading && !erro && totalPacientes > 0 && (
+              <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+                <p className="text-sm text-gray-600">
                   Mostrando{" "}
-                  <span className="font-semibold text-primary">
-                    {Math.min(indiceFinal,totalPacientes)-indiceInicial}
+                  <span className="font-semibold">
+                    {Math.min(indiceFinal, totalPacientes) - indiceInicial}
                   </span>{" "}
                   pacientes de{" "}
-                  <span className="font-semibold text-primary">
-                    {totalPacientes}
-                  </span>
+                  <span className="font-semibold">{totalPacientes}</span>
                 </p>
                 <div className="flex items-center gap-2">
-                  <button onClick={()=>setPaginaAtual((pagina)=>pagina-1)}
-                    disabled={paginaAtual===1}
-                    className="size-10 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                  <button
+                    aria-label="Página anterior"
+                    onClick={() => setPaginaAtual((pagina) => pagina - 1)}
+                    disabled={paginaAtual === 1}
+                    className={botaoPagina}
+                  >
                     <span className="material-symbols-outlined">
                       chevron_left
                     </span>
                   </button>
-                  <span className="px-3 text-sm font-medium">
+                  <span className="px-3 text-sm font-medium tabular-nums">
                     Página {paginaAtual} de {totalPaginas}
                   </span>
                   <button
-                  onClick={()=> setPaginaAtual((pagina)=>pagina+1)}
-                  disabled={paginaAtual===totalPaginas} className="size-10 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors ">
+                    aria-label="Próxima página"
+                    onClick={() => setPaginaAtual((pagina) => pagina + 1)}
+                    disabled={paginaAtual === totalPaginas}
+                    className={botaoPagina}
+                  >
                     <span className="material-symbols-outlined">
                       chevron_right
                     </span>
@@ -229,10 +302,11 @@ export default function Evolucoes() {
                 </div>
               </div>
             )}
+
             <div className="flex justify-center pb-8 pt-4">
-              <p className="text-xs text-center text-primary">
+              <p className="text-center text-xs text-gray-500">
                 © 2026 FisioHub. Todos os direitos reservados. <br />
-                Informações Confidenciais do Paciente.
+                Informações confidenciais do paciente.
               </p>
             </div>
           </div>
