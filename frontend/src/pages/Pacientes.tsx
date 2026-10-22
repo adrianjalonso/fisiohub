@@ -353,13 +353,13 @@ export default function PacientesPage() {
                       const ativo = paciente.status === "Tratamento ativo";
 
                       return (
-                        <tr
+                        <tr 
                           key={paciente.id}
                           className="cursor-pointer transition-colors hover:bg-primary/5"
                         >
                           
 
-                          <td className="px-6 py-4 align-middle">
+                          <Link to={`/pacientes/${paciente.id}`} className="px-6 py-4 align-middle">
                             <div className="flex items-center gap-3">
                               <img
                                 className="size-11 rounded-full bg-gray-100 object-cover ring-2 ring-white"
@@ -378,7 +378,7 @@ export default function PacientesPage() {
                                 </span>
                               </div>
                             </div>
-                          </td>
+                          </Link>
 
                           <td className="px-6 py-4 align-middle">
                             <div className="text-sm font-medium">

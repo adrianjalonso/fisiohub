@@ -1,8 +1,9 @@
 import Menu from "../components/Menu";
 import { createClient } from "@supabase/supabase-js";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import type { Agendamento } from "../types/types";
 import { useUser } from "../context/UserContext";
+import { useNavigate } from "react-router-dom";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -194,14 +195,10 @@ export default function Dashboard() {
       setAtendimentosHoje(totalHoje);
       setAgendamentosHoje(data || []);
 
-      const {
-        data: dadosLista,
-        error: dadosError,
-        count: contagem,
-      } = await supabase
-        .from("pacientes")
-        .select(
-          `
+      const { data: dadosLista, error: dadosError } = await supabase
+  .from("pacientes")
+  .select(
+    `
     id,
     nome_paciente,
     sobrenome_paciente,
@@ -216,18 +213,20 @@ export default function Dashboard() {
       )
     )
   `,
-          { count: "exact" },
-        )
-        .eq("id_user", IdUser)
-        .eq("agendamentos.status", "Atendido")
-        .lte("agendamentos.data_hora", new Date().toISOString());
+  )
+  .eq("id_user", IdUser)
+  .eq("agendamentos.status", "Atendido")
+  .lte("agendamentos.data_hora", new Date().toISOString());
 
-      if (dadosError) {
-        console.error("Erro ao buscar pacientes:", dadosError);
-      } else {
-        setListaPacientes((dadosLista ?? []) as Pacientes[]);
-        setEvolucoesDoDia(contagem || 0);
-      }
+if (dadosError) {
+  console.error("Erro ao buscar pacientes:", dadosError);
+} else {
+  const pendentes = ((dadosLista ?? []) as Pacientes[]).filter((p) =>
+    p.agendamentos.some((a) => a.evolucoes.length === 0),
+  );
+  setListaPacientes(pendentes);
+  setEvolucoesDoDia(pendentes.length);
+}
     }
 
     carregarDados();
@@ -253,6 +252,83 @@ export default function Dashboard() {
         ? "trending_down"
         : "trending_flat";
 
+        const navigate = useNavigate();
+
+const [busca, setBusca] = useState("");
+const [resultados, setResultados] = useState<
+  { id: number; nome_paciente: string | null; sobrenome_paciente: string | null }[]
+>([]);
+const [buscando, setBuscando] = useState(false);
+const [abrirResultados, setAbrirResultados] = useState(false);
+const buscaRef = useRef<HTMLDivElement>(null);
+
+// Buscar pacientes (con debounce de 300ms)
+useEffect(() => {
+  const termo = busca.trim();
+
+  if (!IdUser || termo.length < 2) {
+    setResultados([]);
+    setBuscando(false);
+    return;
+  }
+
+  setBuscando(true);
+
+  const timer = setTimeout(async () => {
+    let query = supabase
+      .from("pacientes")
+      .select("id, nome_paciente, sobrenome_paciente")
+      .eq("id_user", IdUser);
+
+    // Cada palabra debe coincidir con nombre o apellido ("maria silva" funciona)
+    termo
+      .split(/\s+/)
+      .map((t) => t.replace(/[%,()]/g, ""))
+      .filter(Boolean)
+      .forEach((t) => {
+        query = query.or(
+          `nome_paciente.ilike.%${t}%,sobrenome_paciente.ilike.%${t}%`,
+        );
+      });
+
+    const { data, error } = await query
+      .order("nome_paciente", { ascending: true })
+      .limit(8);
+
+    if (error) console.error(error);
+    setResultados(data ?? []);
+    setBuscando(false);
+  }, 300);
+
+  return () => clearTimeout(timer);
+}, [busca, IdUser]);
+
+// Cerrar el desplegable al hacer clic fuera
+useEffect(() => {
+  function aoClicarFora(e: MouseEvent) {
+    if (buscaRef.current && !buscaRef.current.contains(e.target as Node)) {
+      setAbrirResultados(false);
+    }
+  }
+  document.addEventListener("mousedown", aoClicarFora);
+  return () => document.removeEventListener("mousedown", aoClicarFora);
+}, []);
+
+function abrirFicha(id: number) {
+  setAbrirResultados(false);
+  setBusca("");
+  navigate(`/pacientes/${id}`);
+}
+
+function completarNota(paciente: Pacientes, agendamento: AgendamentoPendente) {
+  navigate("/novaevolucao", {
+    state: {
+      idPaciente: paciente.id,
+      idAgendamento: agendamento.id,
+    },
+  });
+}
+
   return (
     <div className="flex h-screen w-full overflow-hidden">
       <Menu />
@@ -272,23 +348,62 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="relative hidden w-80 md:block">
-              <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                search
-              </span>
-              <input
-                className="h-10 w-full rounded-xl border border-transparent bg-gray-50 pl-10 pr-4 text-sm placeholder-gray-400 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/30"
-                type="text"
-                placeholder="Buscar pacientes, condições..."
-              />
-            </div>
-            <button
-              aria-label="Notificações"
-              className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 text-gray-600 transition hover:bg-gray-100 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            >
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
-            </button>
+            <div ref={buscaRef} className="relative hidden w-80 md:block">
+  <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+    search
+  </span>
+  <input
+    className="h-10 w-full rounded-xl border border-transparent bg-gray-50 pl-10 pr-4 text-sm placeholder-gray-400 outline-none transition focus:border-primary/40 focus:bg-white focus:ring-2 focus:ring-primary/30"
+    type="text"
+    placeholder="Buscar pacientes..."
+    value={busca}
+    onChange={(e) => {
+      setBusca(e.target.value);
+      setAbrirResultados(true);
+    }}
+    onFocus={() => setAbrirResultados(true)}
+    onKeyDown={(e) => {
+      if (e.key === "Escape") setAbrirResultados(false);
+      if (e.key === "Enter" && resultados.length > 0) {
+        abrirFicha(resultados[0].id);
+      }
+    }}
+  />
+
+  {abrirResultados && busca.trim().length >= 2 && (
+    <div className="absolute left-0 right-0 top-12 z-20 overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/10">
+      {buscando ? (
+        <p className="px-4 py-3 text-sm text-gray-500">Buscando...</p>
+      ) : resultados.length === 0 ? (
+        <p className="px-4 py-3 text-sm text-gray-500">
+          Ningún paciente encontrado
+        </p>
+      ) : (
+        <ul className="max-h-80 overflow-y-auto py-1">
+          {resultados.map((p) => (
+            <li key={p.id}>
+              <button
+                type="button"
+                onClick={() => abrirFicha(p.id)}
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-primary/5 focus:bg-primary/5 focus:outline-none"
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+                  {iniciais(p.nome_paciente, p.sobrenome_paciente)}
+                </div>
+                <span className="truncate text-sm font-medium">
+                  {[p.nome_paciente, p.sobrenome_paciente]
+                    .filter(Boolean)
+                    .join(" ")}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )}
+</div>
+            
           </div>
         </header>
 
@@ -512,7 +627,15 @@ export default function Dashboard() {
                     <p className="text-sm font-medium">Nenhuma nota pendente</p>
                   </div>
                 ) : (
-                  listaPacientes.map((paciente) => (
+                  listaPacientes.map((paciente) => {
+                    const pendente = paciente.agendamentos
+    .filter((a) => a.evolucoes.length === 0)
+    .sort(
+      (a, b) =>
+        new Date(a.data_hora).getTime() - new Date(b.data_hora).getTime(),
+    )[0];
+    return (
+                    
                     <div
                       key={paciente.id}
                       className="flex flex-col gap-3 rounded-xl border border-amber-100 bg-amber-50/50 p-4 transition hover:border-amber-200"
@@ -548,24 +671,38 @@ export default function Dashboard() {
                         </p>
                       </div>
                       <div className="flex items-center justify-between">
-                        <p className="rounded-md bg-white px-2 py-1 text-xs font-medium text-gray-600 shadow-sm ring-1 ring-black/5">
-                          Acompanhamento
-                        </p>
-                        <button className="flex items-center gap-1 text-xs font-bold text-primary-dark hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
-                          Completar nota
-                          <span className="material-symbols-outlined text-sm">
-                            arrow_forward
-                          </span>
-                        </button>
-                      </div>
+                       <p className="shrink-0 text-xs text-gray-500">
+        {pendente?.data_hora
+          ? new Date(pendente.data_hora).toLocaleString("pt-BR", {
+              day: "2-digit",
+              month: "short",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "Data indisponível"}
+      </p>
+
+      {/* ...e o botão fica assim: */}
+      <button
+        type="button"
+        onClick={() => pendente && completarNota(paciente, pendente)}
+        className="flex items-center gap-1 text-xs font-bold text-primary-dark hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+      >
+        Completar nota
+        <span className="material-symbols-outlined text-sm">arrow_forward</span>
+      </button>
+    </div>
                     </div>
-                  ))
+                  )})
                 )}
               </div>
 
-              <button className="mt-2 w-full rounded-xl border border-dashed border-gray-300 py-2.5 text-sm font-medium text-gray-600 transition hover:border-primary hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
-                Ver todas as tarefas pendentes
-              </button>
+              <button
+  onClick={() => navigate("/evolucoespendentes")}
+  className="mt-2 w-full rounded-xl border border-dashed ..."
+>
+  Ver todas as tarefas pendentes
+</button>
             </section>
           </div>
         </div>

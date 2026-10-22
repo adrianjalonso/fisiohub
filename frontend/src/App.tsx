@@ -12,6 +12,7 @@ import Settings from "./pages/Settings";
 import Evolucoes from "./pages/Evolucoes";
 import NovaEvolucao from "./pages/NovaEvolucao";
 import NovoAgendamento from "./pages/NovoAgendamento";
+import EvolucoesPendentes from "./pages/EvolucoesPendentes";
 
 
 export default function App() {
@@ -71,6 +72,7 @@ export default function App() {
         <Route path="/evolucoes" element={<Evolucoes />} />
         <Route path="/novaevolucao" element={<NovaEvolucao />} />
         <Route path="/novoagendamento" element={<NovoAgendamento />} />
+        <Route path="/evolucoespendentes" element={<EvolucoesPendentes />} />
       </Routes>
     </div>
     </UserProvider>
