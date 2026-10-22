@@ -102,10 +102,170 @@ function Dado({
   );
 }
 
+interface EvolucaoExport {
+  id: number | string;
+  patologia: string | null;
+  texto: string | null;
+  created_at: string;
+  data_atendimento: string;
+  tipo: string | null;
+}
+
+function esc(valor: unknown) {
+  return String(valor ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+const FORMATO_DATA_HORA: Intl.DateTimeFormatOptions = {
+  day: "2-digit",
+  month: "long",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+};
+
+function montarDocumento(
+  p: PacienteFicha,
+  itens: EvolucaoExport[],
+  profissional: string,
+) {
+  const nome =
+    [p.nome_paciente, p.sobrenome_paciente].filter(Boolean).join(" ") ||
+    "Paciente";
+  const idade = calcularIdade(p.data_nascimento);
+  const nascimento = p.data_nascimento
+    ? new Date(p.data_nascimento).toLocaleDateString("pt-BR", {
+        timeZone: "UTC",
+      })
+    : "";
+  const emitido = new Date().toLocaleString("pt-BR", FORMATO_DATA_HORA);
+
+  const dados: [string, string][] = (
+    [
+      ["Prontuário", `#${p.id}`],
+      ["Nascimento", nascimento ? `${nascimento}${idade !== null ? ` (${idade} anos)` : ""}` : ""],
+      ["Gênero", p.genero ?? ""],
+      ["Telefone", p.telefone ? formatarTelefone(p.telefone) : ""],
+      ["E-mail", p.email ?? ""],
+      ["Endereço", p.endereco ?? ""],
+      ["Situação", p.status ?? ""],
+    ] as [string, string][]
+  ).filter(([, valor]) => valor);
+
+  const blocoDados = dados
+    .map(
+      ([r, v]) =>
+        `<div class="dado"><span>${esc(r)}</span><strong>${esc(v)}</strong></div>`,
+    )
+    .join("");
+
+  const blocoEvolucoes = itens
+    .map((e) => {
+      const subtitulo = [e.tipo, e.patologia].filter(Boolean).join(" • ");
+      return `
+      <article class="evo">
+        <header>
+          <h3>${esc(
+            new Date(e.data_atendimento).toLocaleString("pt-BR", FORMATO_DATA_HORA),
+          )}</h3>
+          ${subtitulo ? `<span>${esc(subtitulo)}</span>` : ""}
+        </header>
+        <p class="texto">${esc(e.texto || "Sem descrição.")}</p>
+        <p class="meta">Registrada em ${esc(
+          new Date(e.created_at).toLocaleString("pt-BR", FORMATO_DATA_HORA),
+        )}</p>
+      </article>`;
+    })
+    .join("");
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Prontuário - ${esc(nome)}</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #1f2937; }
+  .topo { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #059669; padding-bottom: 10px; }
+  .topo h1 { margin: 0; font-size: 20pt; }
+  .topo p { margin: 0; font-size: 9pt; color: #6b7280; text-align: right; }
+  h2 { font-size: 12pt; margin: 22px 0 8px; color: #047857; }
+  .dados { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; }
+  .dado span { display: block; font-size: 8.5pt; color: #6b7280; }
+  .dado strong { font-weight: 600; font-size: 10.5pt; }
+  .evo { break-inside: avoid; border-left: 3px solid #059669; background: #f3faf6; padding: 8px 12px; margin-bottom: 12px; }
+  .evo header { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .evo h3 { margin: 0; font-size: 11pt; }
+  .evo header span { font-size: 9.5pt; color: #047857; }
+  .texto { margin: 6px 0 4px; white-space: pre-wrap; }
+  .meta { margin: 0; font-size: 8.5pt; color: #6b7280; }
+  .assinatura { break-inside: avoid; margin-top: 48px; text-align: center; }
+  .assinatura div { width: 260px; margin: 0 auto 4px; border-top: 1px solid #374151; }
+  .rodape { margin-top: 24px; font-size: 8.5pt; color: #6b7280; text-align: center; }
+</style>
+</head>
+<body>
+  <div class="topo">
+    <h1>Prontuário do paciente</h1>
+    <p>FisioHub<br />Emitido em ${esc(emitido)}</p>
+  </div>
+
+  <h2>${esc(nome)}</h2>
+  <div class="dados">${blocoDados}</div>
+
+  <h2>Evoluções (${itens.length})</h2>
+  ${blocoEvolucoes}
+
+  <div class="assinatura">
+    <div></div>
+    <p>${esc(profissional || "Fisioterapeuta responsável")}</p>
+  </div>
+  <p class="rodape">Documento confidencial. Contém informações sensíveis do paciente.</p>
+</body>
+</html>`;
+}
+
+function imprimirHtml(html: string, tituloArquivo: string) {
+  const iframe = document.createElement("iframe");
+  iframe.style.cssText =
+    "position:fixed;right:0;bottom:0;width:0;height:0;border:0;";
+  document.body.appendChild(iframe);
+
+  const janela = iframe.contentWindow;
+  if (!janela) {
+    iframe.remove();
+    return false;
+  }
+
+  janela.document.open();
+  janela.document.write(html);
+  janela.document.close();
+
+  // O navegador usa o título da página como nome sugerido do PDF
+  const tituloOriginal = document.title;
+  document.title = tituloArquivo;
+  janela.onafterprint = () => {
+    document.title = tituloOriginal;
+    iframe.remove();
+  };
+
+  setTimeout(() => {
+    janela.focus();
+    janela.print();
+  }, 250);
+
+  return true;
+}
+
 export default function FichaPaciente() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { IdUser } = useUser();
+  const { IdUser, titulo, sobrenome: sobrenomeUser } = useUser();
 
   const [paciente, setPaciente] = useState<PacienteFicha | null>(null);
   const [evolucoes, setEvolucoes] = useState<Evolucao[]>([]);
@@ -117,6 +277,7 @@ export default function FichaPaciente() {
   const [salvando, setSalvando] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [mostrarTodas, setMostrarTodas] = useState(false);
+  const [exportando, setExportando] = useState(false);
 
   useEffect(() => {
     if (!id || !IdUser) return;
@@ -160,6 +321,83 @@ export default function FichaPaciente() {
 
     carregarFicha();
   }, [id, IdUser]);
+
+  async function exportarProntuario() {
+  if (!paciente || exportando) return;
+
+  setExportando(true);
+  setFeedback(null);
+
+  const { data: lista, error } = await supabase
+    .from("evolucoes")
+    .select("id, patologia, texto, created_at, id_agendamento")
+    .eq("paciente_id", paciente.id);
+
+  if (error) {
+    console.error("Erro ao exportar prontuário:", error);
+    setExportando(false);
+    setFeedback({
+      tipo: "erro",
+      mensagem: "Não foi possível gerar o prontuário. Tente novamente.",
+    });
+    return;
+  }
+
+  const registros = (lista ?? []) as (Evolucao & {
+    id_agendamento: number | null;
+  })[];
+
+  // Busca a data de cada atendimento vinculado às evoluções
+  const ids = registros
+    .map((r) => r.id_agendamento)
+    .filter((v): v is number => !!v);
+
+  const atendimentos = new Map<number, { data_hora: string; tipo: string | null }>();
+
+  if (ids.length > 0) {
+    const { data: ags } = await supabase
+      .from("agendamentos")
+      .select("id, data_hora, tipo")
+      .in("id", ids);
+
+    (ags ?? []).forEach((a: { id: number; data_hora: string; tipo: string | null }) =>
+      atendimentos.set(a.id, a),
+    );
+  }
+
+  const itens: EvolucaoExport[] = registros
+    .map((r) => {
+      const ag = r.id_agendamento ? atendimentos.get(r.id_agendamento) : undefined;
+      return {
+        id: r.id,
+        patologia: r.patologia,
+        texto: r.texto,
+        created_at: r.created_at,
+        data_atendimento: ag?.data_hora ?? r.created_at,
+        tipo: ag?.tipo ?? null,
+      };
+    })
+    // Ordem cronológica: do primeiro atendimento ao mais recente
+    .sort(
+      (a, b) =>
+        new Date(a.data_atendimento).getTime() -
+        new Date(b.data_atendimento).getTime(),
+    );
+
+  const profissional = [titulo, sobrenomeUser].filter(Boolean).join(" ");
+  const html = montarDocumento(paciente, itens, profissional);
+  const nomeArquivo = `Prontuário - ${nomeCompleto || "Paciente"}`;
+
+  const ok = imprimirHtml(html, nomeArquivo);
+  setExportando(false);
+
+  if (!ok) {
+    setFeedback({
+      tipo: "erro",
+      mensagem: "Não foi possível abrir a impressão neste navegador.",
+    });
+  }
+}
 
   function iniciarEdicao() {
     if (!paciente) return;
@@ -666,6 +904,17 @@ export default function FichaPaciente() {
                           )}
                         </div>
                       </div>
+                      <button
+    type="button"
+    onClick={exportarProntuario}
+    disabled={exportando || evolucoes.length === 0}
+    className="flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-2 text-sm font-semibold text-primary-dark transition-colors hover:bg-primary/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    <span className="material-symbols-outlined text-lg">
+      {exportando ? "progress_activity" : "print"}
+    </span>
+    {exportando ? "Gerando..." : "Exportar"}
+  </button>
                     </div>
 
                     {evolucoes.length === 0 ? (
