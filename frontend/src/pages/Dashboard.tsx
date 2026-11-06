@@ -330,11 +330,11 @@ function completarNota(paciente: Pacientes, agendamento: AgendamentoPendente) {
 }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
+    <div className="flex h-dvh w-full overflow-hidden">
       <Menu />
       <main className="flex flex-1 flex-col overflow-y-auto bg-primary/10">
         {/* Header */}
-        <header className="sticky top-0 z-10 flex w-full items-center justify-between gap-4 border-b border-green-100 bg-white/80 px-8 py-4 backdrop-blur-md">
+        <header className="sticky top-0 z-10 flex w-full flex-col gap-3 border-b border-green-100 bg-white/80 px-4 py-3 backdrop-blur-md sm:px-6 sm:py-4 md:flex-row md:items-center md:justify-between md:gap-4 lg:px-8">
           <div className="flex items-center gap-4">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary-dark">
               <span className="material-symbols-outlined">calendar_today</span>
@@ -348,7 +348,7 @@ function completarNota(paciente: Pacientes, agendamento: AgendamentoPendente) {
           </div>
 
           <div className="flex items-center gap-4">
-            <div ref={buscaRef} className="relative hidden w-80 md:block">
+            <div ref={buscaRef} className="relative w-full md:w-80">
   <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
     search
   </span>
@@ -407,7 +407,7 @@ function completarNota(paciente: Pacientes, agendamento: AgendamentoPendente) {
           </div>
         </header>
 
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 p-6 md:p-8">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 pb-28 sm:gap-8 sm:p-6 sm:pb-28 md:p-8 md:pb-28 lg:pb-8">
           {/* Saudação */}
           <div className="flex flex-col gap-1">
             <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
@@ -546,15 +546,15 @@ function completarNota(paciente: Pacientes, agendamento: AgendamentoPendente) {
                     return (
                       <div
                         key={agendamento.id}
-                        className={`flex items-center justify-between gap-4 rounded-xl border p-4 transition ${
+                        className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 transition ${
                           ehProximo
                             ? "border-primary/40 bg-primary/5 shadow-sm"
                             : "border-gray-100 hover:border-primary/30 hover:bg-primary/5"
                         } ${passou ? "opacity-60" : ""}`}
                       >
-                        <div className="flex min-w-0 items-center gap-4">
+                        <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
                           <div
-                            className={`flex w-20 shrink-0 flex-col items-center justify-center rounded-xl px-3 py-2 ${
+                            className={`flex w-16 shrink-0 flex-col items-center justify-center rounded-xl px-2 py-2 sm:w-20 sm:px-3 ${
                               ehProximo
                                 ? "bg-primary text-white"
                                 : "bg-primary/10 text-primary-dark"

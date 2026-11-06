@@ -5,6 +5,14 @@ import { useEffect, useState, useRef } from "react";
 import { useUser } from "../context/UserContext";
 import { createPortal } from "react-dom";
 
+interface EvolucaoPaciente {
+  id: number | string;
+  paciente_id: number | string;
+  patologia: string | null;
+  texto: string | null;
+  created_at: string;
+}
+
 interface Pacientes {
   id: number;
   nome_paciente: string;
@@ -13,6 +21,26 @@ interface Pacientes {
   genero: string;
   status: string;
   data_nascimento: string;
+  evolucoes?: EvolucaoPaciente[];
+}
+
+interface EvolucaoPaciente {
+  id: number | string;
+  paciente_id: number | string;
+  patologia: string | null;
+  texto: string | null;
+  created_at: string;
+}
+
+interface Pacientes {
+  id: number;
+  nome_paciente: string;
+  sobrenome_paciente: string;
+  id_user: number;
+  genero: string;
+  status: string;
+  data_nascimento: string;
+  evolucoes?: EvolucaoPaciente[];
 }
 
 const ALTURA_ESTIMADA_MENU = 320;
@@ -105,11 +133,11 @@ export default function PacientesPage() {
 
       const { data, error } = await supabase
         .from("pacientes")
-        .select("*")
+        .select("*, evolucoes(id,paciente_id,patologia,texto,created_at)")
         .eq("id_user", IdUser);
 
       if (data) {
-        setPacientes(data);
+        setPacientes(data as Pacientes[]);
       } else {
         console.log(error);
       }
@@ -230,15 +258,15 @@ export default function PacientesPage() {
     "flex w-full items-center gap-3 px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-emerald-50 focus:outline-none focus-visible:bg-emerald-50";
 
   return (
-    <div className="flex h-screen flex-row overflow-hidden">
+    <div className="flex h-dvh flex-row overflow-hidden">
       <Menu />
       <main className="relative flex h-full flex-1 flex-col overflow-hidden">
         <div className="pointer-events-none absolute left-0 top-0 h-64 w-full bg-gradient-to-b from-emerald-100/60 to-transparent"></div>
-        <div className="z-10 flex-1 scroll-smooth overflow-y-auto p-4 md:p-8 lg:p-12">
+        <div className="z-10 flex-1 scroll-smooth overflow-y-auto p-4 pb-28 md:p-8 md:pb-28 lg:p-12 lg:pb-12">
           <div className="mx-auto flex max-w-7xl flex-col gap-8">
             {/* Breadcrumb */}
             <nav
-              className="flex items-center text-sm font-medium"
+              className="flex flex-wrap items-center gap-y-1 text-sm font-medium"
               aria-label="Você está em"
             >
               <Link
@@ -264,8 +292,8 @@ export default function PacientesPage() {
                   consultas com eficiência.
                 </p>
               </div>
-              <div className="flex gap-4">
-                <div className="flex items-center gap-3 rounded-2xl bg-white px-5 py-3 shadow-sm ring-1 ring-black/5">
+              <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:w-auto md:flex md:gap-4">
+                <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-black/5 sm:px-5">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
                     <span className="material-symbols-outlined">
                       diversity_1
@@ -280,7 +308,7 @@ export default function PacientesPage() {
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 rounded-2xl bg-white px-5 py-3 shadow-sm ring-1 ring-black/5">
+                <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-black/5 sm:px-5">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary-dark">
                     <span className="material-symbols-outlined">
                       health_and_safety
@@ -313,7 +341,7 @@ export default function PacientesPage() {
                   type="text"
                 />
               </div>
-              <div className="flex w-full gap-3 md:w-auto">
+              <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
                 <button className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
                   <span className="material-symbols-outlined text-xl">
                     filter_list
@@ -322,7 +350,7 @@ export default function PacientesPage() {
                 </button>
                 <Link
                   to="/registro"
-                  className="flex min-w-[180px] flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:bg-primary-dark hover:shadow-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 md:flex-none"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:bg-primary-dark hover:shadow-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 md:flex-none"
                 >
                   <span className="material-symbols-outlined text-xl">add</span>
                   Novo paciente
@@ -332,8 +360,9 @@ export default function PacientesPage() {
 
             {/* Tabela */}
             <div className="flex min-h-[500px] flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-left">
+              {/* Tabela — telas médias e maiores */}
+              <div className="hidden overflow-x-auto xl:block">
+                <table className="w-full min-w-[760px] border-collapse text-left">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50/70 text-sm text-gray-500">
                       <th className="px-6 py-4 font-semibold">Nome</th>
@@ -353,14 +382,15 @@ export default function PacientesPage() {
                       const ativo = paciente.status === "Tratamento ativo";
 
                       return (
-                        <tr 
+                        <tr
                           key={paciente.id}
                           className="cursor-pointer transition-colors hover:bg-primary/5"
                         >
-                          
-
-                          <Link to={`/pacientes/${paciente.id}`} className="px-6 py-4 align-middle">
-                            <div className="flex items-center gap-3">
+                          <td className="px-6 py-4 align-middle">
+                            <Link
+                              to={`/pacientes/${paciente.id}`}
+                              className="flex items-center gap-3"
+                            >
                               <img
                                 className="size-11 rounded-full bg-gray-100 object-cover ring-2 ring-white"
                                 src={`https://api.dicebear.com/10.x/personas/svg?seed=${paciente.id}`}
@@ -377,8 +407,8 @@ export default function PacientesPage() {
                                   ID #{paciente.id}
                                 </span>
                               </div>
-                            </div>
-                          </Link>
+                            </Link>
+                          </td>
 
                           <td className="px-6 py-4 align-middle">
                             <div className="text-sm font-medium">
@@ -392,14 +422,43 @@ export default function PacientesPage() {
                           </td>
 
                           <td className="px-6 py-4 align-middle">
-                            <div className="flex items-center gap-2 text-gray-600">
-                              <span className="material-symbols-outlined text-base">
-                                person
-                              </span>
-                              <span className="text-sm font-medium">
-                                Paciente cadastrado
-                              </span>
-                            </div>
+                            {(() => {
+                              const evolucoes = (paciente.evolucoes ??
+                                []) as EvolucaoPaciente[];
+                              const ultimaEvolucao = [...evolucoes].sort(
+                                (a, b) =>
+                                  new Date(b.created_at).getTime() -
+                                  new Date(a.created_at).getTime(),
+                              )[0];
+
+                              if (!ultimaEvolucao) {
+                                return (
+                                  <div className="flex items-center gap-2 text-gray-400">
+                                    <span className="material-symbols-outlined text-base">
+                                      event_busy
+                                    </span>
+                                    <span className="text-sm font-medium">
+                                      Sem evolução
+                                    </span>
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-medium text-gray-900">
+                                    {new Date(
+                                      ultimaEvolucao.created_at,
+                                    ).toLocaleDateString("pt-BR")}
+                                  </span>
+                                  <span className="max-w-[220px] truncate text-xs text-gray-500">
+                                    {ultimaEvolucao.patologia ||
+                                      ultimaEvolucao.texto ||
+                                      "Evolução registrada"}
+                                  </span>
+                                </div>
+                              );
+                            })()}
                           </td>
 
                           <td className="px-6 py-4 align-middle">
@@ -442,27 +501,133 @@ export default function PacientesPage() {
                     })}
                   </tbody>
                 </table>
-
-                {pacientesFiltrados.length === 0 && (
-                  <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary-dark">
-                      <span className="material-symbols-outlined">
-                        {buscaDePacientes ? "search_off" : "group"}
-                      </span>
-                    </div>
-                    <p className="font-semibold">
-                      {buscaDePacientes
-                        ? "Nenhum paciente encontrado"
-                        : "Você ainda não tem pacientes"}
-                    </p>
-                    <p className="max-w-xs text-sm text-gray-500">
-                      {buscaDePacientes
-                        ? "Confira se o nome está certo ou tente buscar só pelo primeiro nome."
-                        : "Cadastre seu primeiro paciente para começar."}
-                    </p>
-                  </div>
-                )}
               </div>
+
+              {/* Cards — celular */}
+              <ul className="flex flex-col divide-y divide-gray-100 xl:hidden">
+                {pacientesFiltrados.map((paciente) => {
+                  const idade = calcularIdade(paciente.data_nascimento);
+                  const ativo = paciente.status === "Tratamento ativo";
+                  const evolucoes = (paciente.evolucoes ??
+                    []) as EvolucaoPaciente[];
+                  const ultimaEvolucao = [...evolucoes].sort(
+                    (a, b) =>
+                      new Date(b.created_at).getTime() -
+                      new Date(a.created_at).getTime(),
+                  )[0];
+
+                  return (
+                    <li key={paciente.id} className="p-4">
+                      <div className="flex items-start gap-3">
+                        <Link
+                          to={`/pacientes/${paciente.id}`}
+                          className="shrink-0"
+                        >
+                          <img
+                            className="size-12 rounded-full bg-gray-100 object-cover ring-2 ring-white"
+                            src={`https://api.dicebear.com/10.x/personas/svg?seed=${paciente.id}`}
+                            alt=""
+                          />
+                        </Link>
+
+                        <div className="min-w-0 flex-1">
+                          <Link
+                            to={`/pacientes/${paciente.id}`}
+                            className="block truncate text-base font-bold"
+                          >
+                            {paciente.nome_paciente}{" "}
+                            {paciente.sobrenome_paciente}
+                          </Link>
+                          <p className="text-xs text-gray-400 tabular-nums">
+                            ID #{paciente.id} •{" "}
+                            {idade !== null ? `${idade} anos` : "Idade não informada"}
+                            {paciente.genero ? ` • ${paciente.genero}` : ""}
+                          </p>
+
+                          <span
+                            className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                              ativo
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full ${
+                                ativo ? "bg-green-600" : "bg-gray-500"
+                              }`}
+                            />
+                            {paciente.status}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          data-menu-trigger
+                          aria-label={`Ações de ${paciente.nome_paciente}`}
+                          aria-expanded={menuAberto === paciente.id}
+                          onClick={(e) => abrirMenu(e, paciente.id)}
+                          className={`shrink-0 rounded-full p-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                            menuAberto === paciente.id
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "text-gray-400 hover:bg-gray-100 hover:text-primary"
+                          }`}
+                        >
+                          <span className="material-symbols-outlined">
+                            more_vert
+                          </span>
+                        </button>
+                      </div>
+
+                      <div className="mt-3 rounded-xl bg-gray-50/70 px-3 py-2">
+                        <p className="text-xs text-gray-500">
+                          Última evolução
+                        </p>
+                        {ultimaEvolucao ? (
+                          <>
+                            <p className="text-sm font-medium text-gray-900">
+                              {new Date(
+                                ultimaEvolucao.created_at,
+                              ).toLocaleDateString("pt-BR")}
+                            </p>
+                            <p className="truncate text-xs text-gray-500">
+                              {ultimaEvolucao.patologia ||
+                                ultimaEvolucao.texto ||
+                                "Evolução registrada"}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="flex items-center gap-1.5 text-sm font-medium text-gray-400">
+                            <span className="material-symbols-outlined text-base">
+                              event_busy
+                            </span>
+                            Sem evolução
+                          </p>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {pacientesFiltrados.length === 0 && (
+                <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary-dark">
+                    <span className="material-symbols-outlined">
+                      {buscaDePacientes ? "search_off" : "group"}
+                    </span>
+                  </div>
+                  <p className="font-semibold">
+                    {buscaDePacientes
+                      ? "Nenhum paciente encontrado"
+                      : "Você ainda não tem pacientes"}
+                  </p>
+                  <p className="max-w-xs text-sm text-gray-500">
+                    {buscaDePacientes
+                      ? "Confira se o nome está certo ou tente buscar só pelo primeiro nome."
+                      : "Cadastre seu primeiro paciente para começar."}
+                  </p>
+                </div>
+              )}
 
               <div className="mt-auto flex flex-col items-center justify-between gap-4 border-t border-gray-100 px-6 py-4 md:flex-row">
                 <p className="text-sm text-gray-600">

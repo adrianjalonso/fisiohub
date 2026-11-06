@@ -7,7 +7,6 @@ import { useUser } from "../context/UserContext";
 interface PacienteFicha {
   id: number;
   nome_paciente: string | null;
-  sobrenome_paciente: string | null;
   data_nascimento: string | null;
   genero: string | null;
   email: string | null;
@@ -15,6 +14,7 @@ interface PacienteFicha {
   endereco: string | null;
   status: string | null;
   idade: number | null;
+  anamnese: string| null
 }
 
 interface Evolucao {
@@ -26,12 +26,12 @@ interface Evolucao {
 
 interface FormDados {
   nome: string;
-  sobrenome: string;
   nascimento: string;
   genero: string;
   email: string;
   telefone: string;
   endereco: string;
+  anamnese: string;
 }
 
 type Feedback = { tipo: "sucesso" | "erro"; mensagem: string } | null;
@@ -134,7 +134,7 @@ function montarDocumento(
   profissional: string,
 ) {
   const nome =
-    [p.nome_paciente, p.sobrenome_paciente].filter(Boolean).join(" ") ||
+    [p.nome_paciente].filter(Boolean).join(" ") ||
     "Paciente";
   const idade = calcularIdade(p.data_nascimento);
   const nascimento = p.data_nascimento
@@ -206,6 +206,8 @@ function montarDocumento(
   .meta { margin: 0; font-size: 8.5pt; color: #6b7280; }
   .assinatura { break-inside: avoid; margin-top: 48px; text-align: center; }
   .assinatura div { width: 260px; margin: 0 auto 4px; border-top: 1px solid #374151; }
+  .assinatura .prof { margin: 0; font-size: 11pt; font-weight: 600; }
+  .assinatura .cargo { margin: 2px 0 0; font-size: 9pt; color: #6b7280; }
   .rodape { margin-top: 24px; font-size: 8.5pt; color: #6b7280; text-align: center; }
 </style>
 </head>
@@ -222,9 +224,10 @@ function montarDocumento(
   ${blocoEvolucoes}
 
   <div class="assinatura">
-    <div></div>
-    <p>${esc(profissional || "Fisioterapeuta responsável")}</p>
-  </div>
+  <div></div>
+  <p class="prof">${esc(profissional || "Fisioterapeuta responsável")}</p>
+  <p class="cargo">Fisioterapeuta</p>
+</div>
   <p class="rodape">Documento confidencial. Contém informações sensíveis do paciente.</p>
 </body>
 </html>`;
@@ -265,7 +268,7 @@ function imprimirHtml(html: string, tituloArquivo: string) {
 export default function FichaPaciente() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { IdUser, titulo, sobrenome: sobrenomeUser } = useUser();
+  const { IdUser, nome: nomeUser, sobrenome: sobrenomeUser } = useUser();
 
   const [paciente, setPaciente] = useState<PacienteFicha | null>(null);
   const [evolucoes, setEvolucoes] = useState<Evolucao[]>([]);
@@ -289,7 +292,7 @@ export default function FichaPaciente() {
       const { data: dadosPaciente, error: erroPaciente } = await supabase
         .from("pacientes")
         .select(
-          "id, nome_paciente, sobrenome_paciente, data_nascimento, genero, email, telefone, endereco, status, idade",
+          "id, nome_paciente, data_nascimento, genero, email, telefone, endereco, status, idade, anamnese",
         )
         .eq("id", id)
         .eq("id_user", IdUser)
@@ -384,7 +387,7 @@ export default function FichaPaciente() {
         new Date(b.data_atendimento).getTime(),
     );
 
-  const profissional = [titulo, sobrenomeUser].filter(Boolean).join(" ");
+  const profissional = [nomeUser, sobrenomeUser].filter(Boolean).join(" ");
   const html = montarDocumento(paciente, itens, profissional);
   const nomeArquivo = `Prontuário - ${nomeCompleto || "Paciente"}`;
 
@@ -403,12 +406,12 @@ export default function FichaPaciente() {
     if (!paciente) return;
     setForm({
       nome: paciente.nome_paciente ?? "",
-      sobrenome: paciente.sobrenome_paciente ?? "",
       nascimento: paciente.data_nascimento?.split("T")[0] ?? "",
       genero: paciente.genero ?? "",
       email: paciente.email ?? "",
       telefone: formatarTelefone(paciente.telefone ?? ""),
       endereco: paciente.endereco ?? "",
+      anamnese: paciente.anamnese ?? "",
     });
     setFeedback(null);
     setEditando(true);
@@ -442,13 +445,13 @@ export default function FichaPaciente() {
 
     const atualizacao = {
       nome_paciente: form.nome.trim(),
-      sobrenome_paciente: form.sobrenome.trim(),
       data_nascimento: form.nascimento || null,
       idade: idade ?? 0,
       genero: form.genero,
       email: form.email.trim(),
       telefone: form.telefone.replace(/\D/g, ""),
       endereco: form.endereco.trim(),
+      anamnese: form.anamnese.trim() || null
     };
 
     const { error } = await supabase
@@ -480,7 +483,7 @@ export default function FichaPaciente() {
   const iconeCampo =
     "material-symbols-outlined pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-gray-400";
 
-  const nomeCompleto = [paciente?.nome_paciente, paciente?.sobrenome_paciente]
+  const nomeCompleto = [paciente?.nome_paciente]
     .filter(Boolean)
     .join(" ");
   const idade = calcularIdade(paciente?.data_nascimento ?? null);
@@ -491,15 +494,15 @@ export default function FichaPaciente() {
     : evolucoes.slice(0, EVOLUCOES_VISIVEIS);
 
   return (
-    <div className="flex h-screen flex-row overflow-hidden">
+    <div className="flex h-dvh flex-row overflow-hidden">
       <Menu />
       <main className="relative flex h-full flex-1 flex-col overflow-hidden">
         <div className="pointer-events-none absolute left-0 top-0 h-64 w-full bg-gradient-to-b from-emerald-100/60 to-transparent"></div>
-        <div className="z-10 flex-1 scroll-smooth overflow-y-auto p-4 md:p-8 lg:p-12">
+        <div className="z-10 flex-1 scroll-smooth overflow-y-auto p-4 pb-28 md:p-8 md:pb-28 lg:p-12 lg:pb-12">
           <div className="mx-auto flex max-w-7xl flex-col gap-8">
             {/* Breadcrumb */}
             <nav
-              className="flex items-center text-sm font-medium"
+              className="flex flex-wrap items-center gap-y-1 text-sm font-medium"
               aria-label="Você está em"
             >
               <Link
@@ -566,15 +569,15 @@ export default function FichaPaciente() {
             {!loading && paciente && (
               <>
                 {/* Cabeçalho da ficha */}
-                <header className="flex flex-col justify-between gap-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 md:flex-row md:items-center">
-                  <div className="flex items-center gap-5">
+                <header className="flex flex-col justify-between gap-5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 sm:p-6 md:flex-row md:items-center">
+                  <div className="flex items-center gap-4 sm:gap-5">
                     <img
-                      className="size-20 shrink-0 rounded-full bg-gray-100 object-cover ring-4 ring-primary/10"
+                      className="size-16 shrink-0 rounded-full bg-gray-100 object-cover ring-4 ring-primary/10 sm:size-20"
                       src={`https://api.dicebear.com/10.x/personas/svg?seed=${paciente.id}`}
                       alt=""
                     />
                     <div className="flex min-w-0 flex-col gap-1.5">
-                      <h1 className="truncate text-2xl font-bold tracking-tight md:text-3xl">
+                      <h1 className="truncate text-xl font-bold tracking-tight sm:text-2xl md:text-3xl">
                         {nomeCompleto || "Paciente sem nome"}
                       </h1>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-gray-500">
@@ -619,7 +622,7 @@ export default function FichaPaciente() {
                           state: { idPaciente: paciente.id },
                         })
                       }
-                      className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:bg-primary-dark hover:shadow-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:bg-primary-dark hover:shadow-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 sm:flex-none"
                     >
                       <span className="material-symbols-outlined text-xl">
                         clinical_notes
@@ -648,7 +651,7 @@ export default function FichaPaciente() {
                 <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-5">
                   {/* Dados do paciente */}
                   <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 lg:col-span-2">
-                    <div className="flex items-center justify-between gap-3 border-b border-gray-100 p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 p-4 sm:p-5">
                       <div className="flex items-center gap-3">
                         <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary-dark">
                           <span className="material-symbols-outlined text-xl">
@@ -672,16 +675,11 @@ export default function FichaPaciente() {
                     </div>
 
                     {!editando || !form ? (
-                      <div className="flex flex-col gap-5 p-5">
+                      <div className="flex flex-col gap-4 p-4 sm:gap-5 sm:p-5">
                         <Dado
                           icone="badge"
                           rotulo="Nome"
                           valor={paciente.nome_paciente}
-                        />
-                        <Dado
-                          icone="badge"
-                          rotulo="Sobrenome"
-                          valor={paciente.sobrenome_paciente}
                         />
                         <Dado
                           icone="calendar_month"
@@ -720,11 +718,28 @@ export default function FichaPaciente() {
                           rotulo="Endereço"
                           valor={paciente.endereco}
                         />
+                        <div className="flex items-start gap-3">
+                          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-dark">
+                            <span className="material-symbols-outlined text-xl">
+                              medical_services
+                            </span>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-gray-500">Anamnese</p>
+                            <p className="whitespace-pre-line break-words text-sm font-medium text-gray-900">
+                              {paciente.anamnese?.trim() || (
+                                <span className="text-gray-400">
+                                  Não informado
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <form onSubmit={salvarDados}>
-                        <div className="flex flex-col gap-5 p-5">
-                          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                        <div className="flex flex-col gap-5 p-4 sm:p-5">
+                          <div className="grid grid-cols-1 gap-5 ">
                             <div className="flex flex-col gap-2">
                               <label htmlFor="nome" className={rotulo}>
                                 Nome <span className="text-red-500">*</span>
@@ -736,20 +751,6 @@ export default function FichaPaciente() {
                                   atualizarCampo("nome", e.target.value)
                                 }
                                 required
-                                className={`${campo} px-4`}
-                                type="text"
-                              />
-                            </div>
-                            <div className="flex flex-col gap-2">
-                              <label htmlFor="sobrenome" className={rotulo}>
-                                Sobrenome
-                              </label>
-                              <input
-                                id="sobrenome"
-                                value={form.sobrenome}
-                                onChange={(e) =>
-                                  atualizarCampo("sobrenome", e.target.value)
-                                }
                                 className={`${campo} px-4`}
                                 type="text"
                               />
@@ -853,6 +854,22 @@ export default function FichaPaciente() {
                               />
                             </div>
                           </div>
+
+                          <div className="flex flex-col gap-2">
+                            <label htmlFor="anamnese" className={rotulo}>
+                              Anamnese
+                            </label>
+                            <textarea
+                              id="anamnese"
+                              value={form.anamnese}
+                              onChange={(e) =>
+                                atualizarCampo("anamnese", e.target.value)
+                              }
+                              className={`${campo} resize-y px-4`}
+                              placeholder="Descreva a queixa principal do paciente, histórico de lesões e quaisquer detalhes relevantes..."
+                              rows={5}
+                            />
+                          </div>
                         </div>
 
                         <div className="flex flex-col-reverse gap-3 border-t border-gray-100 bg-gray-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-end">
@@ -881,7 +898,7 @@ export default function FichaPaciente() {
 
                   {/* Evoluções */}
                   <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 lg:col-span-3">
-                    <div className="flex items-center justify-between gap-3 border-b border-gray-100 p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 p-4 sm:p-5">
                       <div className="flex items-center gap-3">
                         <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary-dark">
                           <span className="material-symbols-outlined text-xl">
@@ -934,7 +951,7 @@ export default function FichaPaciente() {
                       </div>
                     ) : (
                       <>
-                        <ol className="flex flex-col gap-4 p-5">
+                        <ol className="flex flex-col gap-4 p-4 sm:p-5">
                           {evolucoesVisiveis.map((evolucao) => {
                             const data = new Date(evolucao.created_at);
                             return (

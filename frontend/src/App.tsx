@@ -18,6 +18,7 @@ import EvolucoesPendentes from "./pages/EvolucoesPendentes";
 export default function App() {
   const [titulo, setTitulo] = useState("");
   const [sobrenome, setSobrenome] = useState("");
+  const [nome, setNome] = useState("");
   const [IdUser, setIdUser] = useState(() => {
     const id = localStorage.getItem("IdUser");
     return id ? Number(id) : 0;
@@ -27,15 +28,17 @@ export default function App() {
     const titulo = localStorage.getItem("titulo");
     const sobrenome = localStorage.getItem("sobrenome");
     const idUser = localStorage.getItem("IdUser");
+    const nome = localStorage.getItem("nome")
 
     if (titulo) setTitulo(titulo);
     if (sobrenome) setSobrenome(sobrenome);
     if (idUser) setIdUser(Number(idUser));
+    if (nome) setNome(nome);
   }, []);
 
   return (
-    <UserProvider titulo={titulo} sobrenome={sobrenome} IdUser={IdUser}>
-      <div className="h-screen w-screen">
+    <UserProvider titulo={titulo} sobrenome={sobrenome} IdUser={IdUser} nome={nome}>
+      <div className="min-h-dvh w-full">
       <Routes>
         <Route
           path="/"
@@ -44,6 +47,7 @@ export default function App() {
               setTitulo={setTitulo}
               setSobrenome={setSobrenome}
               setIdUser={setIdUser}
+              setNome={setNome}
             />
           }
         />
@@ -54,6 +58,7 @@ export default function App() {
               setTitulo={setTitulo}
               setSobrenome={setSobrenome}
               setIdUser={setIdUser}
+              setNome={setNome}
             />
           }
         />

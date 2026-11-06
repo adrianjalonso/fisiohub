@@ -69,8 +69,8 @@ export default function Cadastro() {
     "absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 transition-colors hover:text-gray-700 focus:outline-none focus-visible:text-primary-dark";
 
   return (
-    <main className="flex min-h-screen w-full">
-      <section className="flex min-h-screen w-full flex-col items-center justify-center bg-primary-light px-6 py-10 lg:w-3/5">
+    <main className="flex min-h-dvh w-full">
+      <section className="flex min-h-dvh w-full flex-col items-center justify-center bg-primary-light px-4 py-8 sm:px-6 sm:py-10 lg:w-3/5">
         <div className="flex w-full max-w-[480px] flex-col gap-8">
           {/* Cabeçalho */}
           <div className="flex flex-col gap-2">
@@ -82,7 +82,7 @@ export default function Cadastro() {
                 FisioHub
               </h1>
             </div>
-            <h2 className="text-3xl font-bold tracking-tight">
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               Crie sua conta
             </h2>
             <p className="text-base text-gray-600">
@@ -335,7 +335,7 @@ export default function Cadastro() {
       </section>
 
       {/* Painel de imagem */}
-      <section className="sticky top-0 hidden min-h-screen w-2/5 flex-col items-center justify-center overflow-hidden lg:flex">
+      <section className="sticky top-0 hidden min-h-dvh w-2/5 flex-col items-center justify-center overflow-hidden lg:flex">
         <img
           className="absolute inset-0 h-full w-full object-cover object-center"
           src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIeJZZryymAKbtCjRZUiZng9G9Z2Uecwuyl5fNiqUHJTgDLf6tkbQbifHN7cmG8d0n0Ch60TTSilDFMvYnTftPcsI-BkByTKi6GJ8dZpgWk94j9FKShDk13sQomWfdXv73oAdLsBHw5BVn696BLwQ5rKIZPY-eLA-tlu_dv0pW5LVSAIsUNJ4TofpuCG1Wrvu3qtk8HEPnYgvBWQQI_d5g5SYM--IDhVGVKdMKMXPQq7hvsvcYOlXiLEMhWdGGM0wS-0TE0af781g"

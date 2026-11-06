@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase";
 type LoginProps = {
   setTitulo: React.Dispatch<React.SetStateAction<string>>;
   setSobrenome: React.Dispatch<React.SetStateAction<string>>;
+  setNome: React.Dispatch<React.SetStateAction<string>>;
   setIdUser: React.Dispatch<React.SetStateAction<number>>;
 };
 
@@ -12,6 +13,7 @@ export default function Login({
   setTitulo,
   setSobrenome,
   setIdUser,
+  setNome,
 }: LoginProps) {
   const navigate = useNavigate();
 
@@ -39,6 +41,8 @@ export default function Login({
     if (data) {
       setTitulo(`${data.titulo} `);
       localStorage.setItem("titulo", data.titulo);
+      setNome(`${data.user_nome}`);
+      localStorage.setItem("nome",data.user_nome)
       setSobrenome(data.user_sobrenome);
       localStorage.setItem("sobrenome", data.user_sobrenome);
       setIdUser(data.user_id);
@@ -60,8 +64,8 @@ export default function Login({
     "material-symbols-outlined pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[20px] text-primary";
 
   return (
-    <main className="flex min-h-screen w-full">
-      <section className="flex min-h-screen w-full flex-col items-center justify-center bg-primary-light px-6 py-10 lg:w-3/5">
+    <main className="flex min-h-dvh w-full">
+      <section className="flex min-h-dvh w-full flex-col items-center justify-center bg-primary-light px-4 py-8 sm:px-6 sm:py-10 lg:w-3/5">
         <div className="flex w-full max-w-[480px] flex-col gap-8">
           {/* Cabeçalho */}
           <div className="flex flex-col gap-2">
@@ -73,7 +77,7 @@ export default function Login({
                 FisioHub
               </h1>
             </div>
-            <h2 className="text-3xl font-bold tracking-tight">
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               Entre na sua conta
             </h2>
             <p className="text-base text-gray-600">
@@ -179,7 +183,7 @@ export default function Login({
       </section>
 
       {/* Painel de imagem */}
-      <section className="sticky top-0 hidden min-h-screen w-2/5 flex-col items-center justify-center overflow-hidden lg:flex">
+      <section className="sticky top-0 hidden min-h-dvh w-2/5 flex-col items-center justify-center overflow-hidden lg:flex">
         <img
           className="absolute inset-0 h-full w-full object-cover object-center"
           src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIeJZZryymAKbtCjRZUiZng9G9Z2Uecwuyl5fNiqUHJTgDLf6tkbQbifHN7cmG8d0n0Ch60TTSilDFMvYnTftPcsI-BkByTKi6GJ8dZpgWk94j9FKShDk13sQomWfdXv73oAdLsBHw5BVn696BLwQ5rKIZPY-eLA-tlu_dv0pW5LVSAIsUNJ4TofpuCG1Wrvu3qtk8HEPnYgvBWQQI_d5g5SYM--IDhVGVKdMKMXPQq7hvsvcYOlXiLEMhWdGGM0wS-0TE0af781g"

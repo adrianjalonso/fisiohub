@@ -85,15 +85,15 @@ export default function Evolucoes() {
     "flex size-10 items-center justify-center rounded-xl border border-gray-200 bg-white transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-40";
 
   return (
-    <div className="flex h-screen flex-row overflow-hidden">
+    <div className="flex h-dvh flex-row overflow-hidden">
       <Menu />
       <main className="relative flex h-full flex-1 flex-col overflow-hidden">
         <div className="pointer-events-none absolute left-0 top-0 h-64 w-full bg-gradient-to-b from-emerald-100/60 to-transparent"></div>
-        <div className="z-10 flex-1 scroll-smooth overflow-y-auto p-4 md:p-8 lg:p-12">
+        <div className="z-10 flex-1 scroll-smooth overflow-y-auto p-4 pb-28 md:p-8 md:pb-28 lg:p-12 lg:pb-12">
           <div className="mx-auto flex max-w-7xl flex-col gap-8">
             {/* Breadcrumb */}
             <nav
-              className="flex items-center text-sm font-medium"
+              className="flex flex-wrap items-center gap-y-1 text-sm font-medium"
               aria-label="Você está em"
             >
               <Link
@@ -140,7 +140,7 @@ export default function Evolucoes() {
               <div className="flex w-full gap-3 md:w-auto">
                 <Link
                   to="/novaevolucao"
-                  className="flex min-w-[180px] flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:bg-primary-dark hover:shadow-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 md:flex-none"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:bg-primary-dark hover:shadow-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 md:flex-none"
                 >
                   <span className="material-symbols-outlined text-xl">add</span>
                   Nova evolução
@@ -252,7 +252,7 @@ export default function Evolucoes() {
                       {/* Ação */}
                       <Link
                         to={`/pacientes/${paciente.id}`}
-                        className="flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-primary px-4 py-2.5 text-sm font-semibold text-primary-dark transition-colors hover:bg-primary hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
+                        className="flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border border-primary px-4 py-2.5 text-sm font-semibold text-primary-dark transition-colors hover:bg-primary hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 md:w-auto"
                       >
                         Ver prontuário completo
                         <span className="material-symbols-outlined text-base">

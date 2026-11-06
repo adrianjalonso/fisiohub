@@ -121,17 +121,17 @@ export default function NovoAgendamento() {
   const rotulo = "text-sm font-medium text-gray-700";
 
   return (
-    <div className="flex h-screen flex-row overflow-hidden">
+    <div className="flex h-dvh flex-row overflow-hidden">
       <Menu />
 
       <main className="relative flex h-full flex-1 flex-col overflow-hidden">
         <div className="pointer-events-none absolute left-0 top-0 h-64 w-full bg-gradient-to-b from-emerald-100/60 to-transparent" />
 
-        <div className="z-10 flex-1 overflow-y-auto p-4 md:p-8 lg:p-12">
+        <div className="z-10 flex-1 overflow-y-auto p-4 pb-28 md:p-8 md:pb-28 lg:p-12 lg:pb-12">
           <div className="mx-auto flex max-w-4xl flex-col gap-8">
             {/* Breadcrumb */}
             <nav
-              className="flex items-center text-sm font-medium"
+              className="flex flex-wrap items-center gap-y-1 text-sm font-medium"
               aria-label="Você está em"
             >
               <Link
@@ -157,17 +157,17 @@ export default function NovoAgendamento() {
 
             {/* Cabeçalho */}
             <header className="flex items-center gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary-dark">
-                <span className="material-symbols-outlined text-3xl">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary-dark sm:h-14 sm:w-14">
+                <span className="material-symbols-outlined text-2xl sm:text-3xl">
                   calendar_add_on
                 </span>
               </div>
 
               <div>
-                <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+                <h2 className="text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">
                   Novo agendamento
                 </h2>
-                <p className="mt-1 text-gray-600">
+                <p className="mt-1 text-sm text-gray-600 sm:text-base">
                   Preencha os dados para agendar um atendimento.
                 </p>
               </div>
@@ -178,7 +178,7 @@ export default function NovoAgendamento() {
               onSubmit={salvarAgendamento}
               className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5"
             >
-              <div className="flex flex-col gap-6 p-6 md:p-8">
+              <div className="flex flex-col gap-6 p-4 sm:p-6 md:p-8">
                 {erro && (
                   <div
                     role="alert"
@@ -359,7 +359,7 @@ export default function NovoAgendamento() {
                 </div>
               </div>
 
-              <div className="flex flex-col-reverse gap-3 border-t border-gray-100 bg-gray-50 px-6 py-4 sm:flex-row sm:items-center sm:justify-end md:px-8 md:py-5">
+              <div className="flex flex-col-reverse gap-3 border-t border-gray-100 bg-gray-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-6 md:px-8 md:py-5">
                 <button
                   type="button"
                   disabled={salvando}

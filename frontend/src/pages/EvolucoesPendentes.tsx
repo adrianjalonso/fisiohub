@@ -129,11 +129,11 @@ export default function EvolucoesPendentes() {
 }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
+    <div className="flex h-dvh w-full overflow-hidden">
       <Menu />
       <main className="flex flex-1 flex-col overflow-y-auto bg-primary/10">
         {/* Header */}
-        <header className="sticky top-0 z-10 flex w-full items-center justify-between gap-4 border-b border-green-100 bg-white/80 px-8 py-4 backdrop-blur-md">
+        <header className="sticky top-0 z-10 flex w-full items-center justify-between gap-3 border-b border-green-100 bg-white/80 px-4 py-3 backdrop-blur-md sm:gap-4 sm:px-6 sm:py-4 lg:px-8">
           <div className="flex items-center gap-4">
             <button
               type="button"
@@ -154,7 +154,7 @@ export default function EvolucoesPendentes() {
           </div>
         </header>
 
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6 md:p-8">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 pb-28 sm:p-6 sm:pb-28 md:p-8 md:pb-28 lg:pb-8">
           {/* Resumo */}
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
             <div className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
@@ -203,9 +203,9 @@ export default function EvolucoesPendentes() {
           </div>
 
           {/* Lista */}
-          <section className="flex flex-col gap-5 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="relative w-full sm:w-80">
+          <section className="flex flex-col gap-5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5 sm:p-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                <div className="relative w-full sm:w-80">
                 <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                   search
                 </span>

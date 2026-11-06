@@ -50,7 +50,7 @@ function horaDoAgendamento(dataHora: string) {
 
 function nomeDoPaciente(a: Agendamentos) {
   return a.pacientes
-    ? `${a.pacientes.nome_paciente} ${a.pacientes.sobrenome_paciente}`
+    ? `${a.pacientes.nome_paciente}`
     : "Paciente desconhecido";
 }
 
@@ -77,7 +77,7 @@ export default function Agenda() {
       const { data, error } = await supabase
         .from("agendamentos")
         .select(
-          `id,paciente_id,data_hora,tipo,status,observacao,pacientes!inner(id,nome_paciente,sobrenome_paciente,id_user)`,
+          `id,paciente_id,data_hora,tipo,status,observacao,pacientes!inner(id,nome_paciente,id_user)`,
         )
         .eq("pacientes.id_user", IdUser);
 
@@ -115,17 +115,17 @@ export default function Agenda() {
     "flex h-10 w-10 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40";
 
   return (
-    <div className="flex h-screen flex-row overflow-hidden">
+    <div className="flex h-dvh flex-row overflow-hidden">
       <Menu />
 
       <main className="relative flex h-full flex-1 flex-col overflow-hidden">
         <div className="pointer-events-none absolute left-0 top-0 h-64 w-full bg-gradient-to-b from-emerald-100/60 to-transparent"></div>
 
-        <div className="z-10 flex-1 scroll-smooth overflow-y-auto p-4 md:p-8 lg:p-12">
+        <div className="z-10 flex-1 scroll-smooth overflow-y-auto p-4 pb-28 md:p-8 md:pb-28 lg:p-12 lg:pb-12">
           <div className="mx-auto flex max-w-7xl flex-col gap-8">
             {/* Breadcrumb */}
             <nav
-              className="flex items-center text-sm font-medium"
+              className="flex flex-wrap items-center gap-y-1 text-sm font-medium"
               aria-label="Você está em"
             >
               <Link
@@ -185,11 +185,11 @@ export default function Agenda() {
               </div>
             </header>
 
-            <div className="grid grid-cols-1 gap-6 lg:h-[calc(100vh-16rem)] lg:min-h-[520px] lg:grid-cols-12">
+            <div className="grid grid-cols-1 gap-6 lg:h-[calc(100dvh-16rem)] lg:min-h-[520px] lg:grid-cols-12">
               {/* Linha do tempo do dia */}
               <section className="flex min-h-[520px] flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 lg:col-span-8 lg:min-h-0 xl:col-span-9">
-                <div className="flex items-center justify-between gap-3 border-b border-gray-100 p-4">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-2 border-b border-gray-100 p-3 sm:p-4">
+                  <div className="flex min-w-0 items-center gap-1 sm:gap-2">
                     <button
                       aria-label="Dia anterior"
                       onClick={() => mudarDia(-1)}
@@ -200,15 +200,15 @@ export default function Agenda() {
                       </span>
                     </button>
 
-                    <div className="flex min-w-[200px] flex-col text-center leading-tight">
-                      <h3 className="text-lg font-bold">
+                    <div className="flex min-w-0 flex-1 flex-col text-center leading-tight">
+                      <h3 className="truncate text-base font-bold sm:text-lg">
                         {dataSelecionada.toLocaleDateString("pt-BR", {
                           day: "numeric",
                           month: "long",
                           year: "numeric",
                         })}
                       </h3>
-                      <p className="text-sm text-gray-500">
+                      <p className="truncate text-xs text-gray-500 sm:text-sm">
                         {diaSemanaCapitalizado}
                       </p>
                     </div>
@@ -227,7 +227,7 @@ export default function Agenda() {
                   <button
                     onClick={() => setDataSelecionada(new Date(hoje))}
                     disabled={ehHoje}
-                    className="rounded-lg bg-primary/10 px-4 py-2 text-sm font-semibold text-primary-dark transition-colors hover:bg-primary/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-default disabled:bg-transparent disabled:text-gray-400"
+                    className="shrink-0 rounded-lg bg-primary/10 px-3 py-2 text-xs font-semibold text-primary-dark transition-colors hover:bg-primary/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-default disabled:bg-transparent disabled:text-gray-400 sm:px-4 sm:text-sm"
                   >
                     Hoje
                   </button>
@@ -272,7 +272,7 @@ export default function Agenda() {
                                     : "border-primary bg-primary/10"
                                 }`}
                               >
-                                <div className="flex items-center justify-between gap-3">
+                                <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
                                   <div className="flex min-w-0 items-baseline gap-2">
                                     <span
                                       className={`text-xs font-semibold tabular-nums ${

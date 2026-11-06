@@ -4,7 +4,8 @@ import { createContext, useContext, type ReactNode } from "react";
 interface UserContextType {
   titulo: string,
   sobrenome: string,
-  IdUser: number
+  IdUser: number,
+  nome: string
 }
 
 const UserContext = createContext<UserContextType | undefined>(
@@ -15,12 +16,13 @@ interface UserProviderProps {
   children: ReactNode,
   titulo: string,
   sobrenome: string,
-  IdUser: number
+  IdUser: number,
+  nome: string
 }
 
-export function UserProvider({ children,titulo,sobrenome,IdUser }: UserProviderProps) {
+export function UserProvider({ children,titulo,nome,sobrenome,IdUser }: UserProviderProps) {
   return(
-    <UserContext.Provider value={{titulo,sobrenome,IdUser}}>
+    <UserContext.Provider value={{titulo,nome,sobrenome,IdUser}}>
       {children}
     </UserContext.Provider>
   )

@@ -4,12 +4,29 @@
 @tailwind components;
 @tailwind utilities;
 
-body,html, #root {
-width: 100vw;
-height: 100vh;
-font-family: 'Lexend', sans-serif;
+html {
+  /* Evita o zoom automático de texto em navegadores móveis */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
-body{
+body,
+html,
+#root {
+  width: 100%;
+  min-height: 100%;
+  font-family: 'Lexend', sans-serif;
+}
+
+body {
+  /* 100dvh acompanha a barra de endereço dos navegadores móveis */
+  min-height: 100dvh;
   overflow-x: hidden;
+}
+
+/* Área segura para aparelhos com notch / barra inferior */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
