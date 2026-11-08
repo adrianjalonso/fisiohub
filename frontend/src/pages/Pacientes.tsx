@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import Menu from "../components/Menu";
-import { supabase } from "../lib/supabase";
+import { api } from "../lib/api";
 import { useEffect, useState, useRef } from "react";
 import { useUser } from "../context/UserContext";
 import { createPortal } from "react-dom";
@@ -24,24 +24,6 @@ interface Pacientes {
   evolucoes?: EvolucaoPaciente[];
 }
 
-interface EvolucaoPaciente {
-  id: number | string;
-  paciente_id: number | string;
-  patologia: string | null;
-  texto: string | null;
-  created_at: string;
-}
-
-interface Pacientes {
-  id: number;
-  nome_paciente: string;
-  sobrenome_paciente: string;
-  id_user: number;
-  genero: string;
-  status: string;
-  data_nascimento: string;
-  evolucoes?: EvolucaoPaciente[];
-}
 
 const ALTURA_ESTIMADA_MENU = 320;
 const LARGURA_MENU = 240;
@@ -119,105 +101,76 @@ export default function PacientesPage() {
   }
 
   useEffect(() => {
-    async function carregarPacientes() {
-      const { count: listaPacientes, error: errorLista } = await supabase
-        .from("pacientes")
-        .select("*", { count: "exact", head: true })
-        .eq("id_user", IdUser);
+  if (!IdUser) return;
 
-      if (listaPacientes) {
-        setTotalPacientes(listaPacientes || 0);
-      } else {
-        console.log(errorLista);
-      }
-
-      const { data, error } = await supabase
-        .from("pacientes")
-        .select("*, evolucoes(id,paciente_id,patologia,texto,created_at)")
-        .eq("id_user", IdUser);
-
-      if (data) {
-        setPacientes(data as Pacientes[]);
-      } else {
-        console.log(error);
-      }
-
-      const { count: pacientesAtivos, error: pacientesAtivosError } =
-        await supabase
-          .from("pacientes")
-          .select("*", { count: "exact", head: true })
-          .eq("id_user", IdUser)
-          .eq("status", "Tratamento ativo");
-
-      if (pacientesAtivos) {
-        setPacientesAtivos(pacientesAtivos);
-      } else {
-        console.log(pacientesAtivosError);
-      }
+  async function carregarPacientes() {
+    try {
+      const lista = await api<Pacientes[]>("/pacientes/detalhado");
+      setPacientes(lista);
+      setTotalPacientes(lista.length);
+      setPacientesAtivos(
+        lista.filter((p) => p.status === "Tratamento ativo").length,
+      );
+    } catch (e) {
+      console.error("Erro ao carregar pacientes:", e);
     }
+  }
 
-    carregarPacientes();
-  }, [IdUser]);
+  carregarPacientes();
+}, [IdUser]);
 
   async function darAlta() {
-    if (!confirmarAlta || processando) return;
+  if (!confirmarAlta || processando) return;
 
-    setProcessando(true);
+  setProcessando(true);
+  const id = confirmarAlta.id;
 
-    const id = confirmarAlta.id;
-
-    const { error } = await supabase
-      .from("pacientes")
-      .update({ status: "Alta" })
-      .eq("id", id)
-      .eq("id_user", IdUser)
-      .eq("status", "Tratamento ativo");
-
+  try {
+    await api(`/pacientes/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: "Alta" }),
+    });
+  } catch (e) {
+    console.error("Erro ao dar alta:", e);
+    alert("Não foi possível dar alta ao paciente.");
+    return;
+  } finally {
     setProcessando(false);
-
-    if (error) {
-      console.error("Erro ao dar alta:", error);
-      alert("Não foi possível dar alta ao paciente.");
-      return;
-    }
-
-    setPacientes((lista) =>
-      lista.map((p) => (p.id === id ? { ...p, status: "Alta" } : p)),
-    );
-
-    setPacientesAtivos((total) => Math.max(0, total - 1));
-    setConfirmarAlta(null);
   }
 
-  async function reativarPaciente(paciente: Pacientes) {
-    if (processando) return;
+  setPacientes((lista) =>
+    lista.map((p) => (p.id === id ? { ...p, status: "Alta" } : p)),
+  );
+  setPacientesAtivos((total) => Math.max(0, total - 1));
+  setConfirmarAlta(null);
+}
 
-    setProcessando(true);
+async function reativarPaciente(paciente: Pacientes) {
+  if (processando) return;
 
-    const { error } = await supabase
-      .from("pacientes")
-      .update({ status: "Tratamento ativo" })
-      .eq("id", paciente.id)
-      .eq("id_user", IdUser)
-      .eq("status", paciente.status);
+  setProcessando(true);
 
+  try {
+    await api(`/pacientes/${paciente.id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: "Tratamento ativo" }),
+    });
+  } catch (e) {
+    console.error("Erro ao reativar:", e);
+    alert("Não foi possível reativar o tratamento.");
+    return;
+  } finally {
     setProcessando(false);
-
-    if (error) {
-      console.error("Erro ao reativar:", error);
-      alert("Não foi possível reativar o tratamento.");
-      return;
-    }
-
-    setPacientes((lista) =>
-      lista.map((p) =>
-        p.id === paciente.id ? { ...p, status: "Tratamento ativo" } : p,
-      ),
-    );
-
-    setPacientesAtivos((total) => total + 1);
-    setMenuAberto(null);
   }
+
+  setPacientes((lista) =>
+    lista.map((p) =>
+      p.id === paciente.id ? { ...p, status: "Tratamento ativo" } : p,
+    ),
+  );
+  setPacientesAtivos((total) => total + 1);
+  setMenuAberto(null);
+}
 
   useEffect(() => {
     if (menuAberto === null) return;

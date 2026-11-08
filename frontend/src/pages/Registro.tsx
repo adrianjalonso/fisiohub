@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { supabase } from "../lib/supabase";
-import { useUser } from "../context/UserContext";
+import { api } from "../lib/api";
 import Menu from "../components/Menu";
 
 function formatarTelefone(valor: string) {
@@ -53,9 +52,8 @@ function hojeParaInput() {
 type Feedback = { tipo: "sucesso" | "erro"; mensagem: string } | null;
 
 // IdUser pode vir por prop (como era antes) ou do contexto do usuário
-export default function Registro({ IdUser: idUserProp }: { IdUser?: number }) {
-  const { IdUser: idUserContexto } = useUser();
-  const IdUser = idUserProp ?? idUserContexto;
+export default function Registro(_props: { IdUser?: number }) {
+
   const navigate = useNavigate();
 
   const [nomeNovoPaciente, setNomeNovoPaciente] = useState("");
@@ -78,22 +76,23 @@ export default function Registro({ IdUser: idUserProp }: { IdUser?: number }) {
     setSalvando(true);
     setFeedback(null);
 
-    const { data, error } = await supabase.from("pacientes").insert({
-      nome_paciente: nomeNovoPaciente.trim(),
-      data_nascimento: DataDeNascimento || null,
-      idade: idade,
-      email: emailPaciente,
-      telefone: telefoneSemFormatar,
-      endereco: endereco,
-      id_user: IdUser,
-      genero: genero,
-      anamnese: anamnese.trim()||null
-    });
-
-    setSalvando(false);
-
-    if (error) {
-      console.error(error);
+        try {
+      await api("/pacientes", {
+        method: "POST",
+        body: JSON.stringify({
+          nome_paciente: nomeNovoPaciente.trim(),
+          data_nascimento: DataDeNascimento || null,
+          idade,
+          email: emailPaciente,
+          telefone: telefoneSemFormatar,
+          endereco,
+          genero,
+          anamnese: anamnese.trim() || null,
+        }),
+      });
+    } catch (e) {
+      console.error(e);
+      setSalvando(false);
       setFeedback({
         tipo: "erro",
         mensagem: "Não foi possível salvar o paciente. Tente novamente.",
@@ -101,7 +100,8 @@ export default function Registro({ IdUser: idUserProp }: { IdUser?: number }) {
       return;
     }
 
-    console.log("Paciente cadastrado!", data);
+    setSalvando(false);
+
     setFeedback({
       tipo: "sucesso",
       mensagem: "Paciente cadastrado com sucesso!",

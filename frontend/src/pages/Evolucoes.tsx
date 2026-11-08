@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Menu from "../components/Menu";
 import { Link } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { api } from "../lib/api";
 import { useUser } from "../context/UserContext";
 
 interface Paciente {
@@ -43,29 +43,25 @@ export default function Evolucoes() {
   const { IdUser } = useUser();
 
   useEffect(() => {
-    async function buscarPacientes() {
-      setLoading(true);
-      setErro(null);
+  if (!IdUser) return;
 
-      const { data, error } = await supabase
-        .from("pacientes")
-        .select(
-          `id,nome_paciente,id_user,evolucoes(id,paciente_id,patologia,texto,created_at)`,
-        )
-        .eq("id_user", IdUser);
+  async function buscarPacientes() {
+    setLoading(true);
+    setErro(null);
 
-      if (error) {
-        console.error("Error ao buscar pacientes:", error);
-        setErro("Não foi possível carregar os pacientes.");
-      } else {
-        setPacientes(data ?? []);
-      }
-
-      setLoading(false);
+    try {
+      const data = await api<Paciente[]>("/pacientes/detalhado");
+      setPacientes(data ?? []);
+    } catch (e) {
+      console.error("Error ao buscar pacientes:", e);
+      setErro("Não foi possível carregar os pacientes.");
     }
 
-    buscarPacientes();
-  }, [IdUser]);
+    setLoading(false);
+  }
+
+  buscarPacientes();
+}, [IdUser]);
 
   // Busca sem acentos
   const pacientesFiltrados = pacientes.filter((paciente) => {

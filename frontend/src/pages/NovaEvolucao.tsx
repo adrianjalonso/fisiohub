@@ -1,6 +1,6 @@
 import Menu from "../components/Menu";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { api, agoraLocal } from "../lib/api";
 import { useEffect, useState } from "react";
 import { useUser } from "../context/UserContext";
 
@@ -45,46 +45,33 @@ export default function NovaEvolucao() {
     }
 
     async function carregarAgendamentos() {
-      setCarregandoAgendamentos(true);
+  setCarregandoAgendamentos(true);
 
-      const { data, error } = await supabase
-        .from("agendamentos")
-        .select("id, data_hora, tipo, evolucoes(id)")
-        .eq("paciente_id", idPaciente)
-        .lte("data_hora", new Date().toISOString())
-        .order("data_hora", { ascending: false });
+  try {
+    const data = await api<AgendamentoDoPaciente[]>(
+      `/agendamentos/sem-evolucao?paciente_id=${idPaciente}&agora=${encodeURIComponent(agoraLocal())}`,
+    );
+    setListaAgendamentos(data);
+  } catch (e) {
+    console.error("Erro ao carregar atendimentos:", e);
+    setListaAgendamentos([]);
+  }
 
-      setCarregandoAgendamentos(false);
-
-      if (error) {
-        console.error("Erro ao carregar atendimentos:", error);
-        setListaAgendamentos([]);
-        return;
-      }
-
-      const semEvolucao = ((data ?? []) as AgendamentoDoPaciente[]).filter(
-        (a) => !a.evolucoes || a.evolucoes.length === 0,
-      );
-      setListaAgendamentos(semEvolucao);
-    }
+  setCarregandoAgendamentos(false);
+}
 
     carregarAgendamentos();
   }, [idPaciente]);
 
   useEffect(() => {
     async function carregarPacientes() {
-      const { data, error } = await supabase
-        .from("pacientes")
-        .select("nome_paciente, id")
-        .eq("id_user", IdUser);
-
-      if (error) {
-        console.error("Erro ao carregar pacientes:", error);
-        return;
-      }
-
-      setListaPacientes(data ?? []);
-    }
+  try {
+    const data = await api<ListaPacientes[]>("/pacientes");
+    setListaPacientes(data);
+  } catch (e) {
+    console.error("Erro ao carregar pacientes:", e);
+  }
+}
 
     if (IdUser) {
       carregarPacientes();
@@ -107,23 +94,26 @@ export default function NovaEvolucao() {
     setSalvando(true);
     setFeedback(null);
 
-    const { error } = await supabase.from("evolucoes").insert({
+    try {
+  await api("/evolucoes", {
+    method: "POST",
+    body: JSON.stringify({
       paciente_id: idPaciente,
       id_agendamento: idAgendamento,
-      fisioterapeuta_id: IdUser,
       texto: evolucao.trim(),
-    });
+    }),
+  });
+} catch (e) {
+  console.error("Erro ao salvar evolução:", e);
+  setSalvando(false);
+  setFeedback({
+    tipo: "erro",
+    mensagem: `Erro ao salvar: ${e instanceof Error ? e.message : "tente novamente"}`,
+  });
+  return;
+}
 
-    setSalvando(false);
-
-    if (error) {
-      console.error("Erro ao salvar evolução:", error);
-      setFeedback({
-        tipo: "erro",
-        mensagem: `Erro ao salvar: ${error.message}`,
-      });
-      return;
-    }
+setSalvando(false);
 
     setFeedback({ tipo: "sucesso", mensagem: "Evolução salva com sucesso!" });
     setEvolucao("");

@@ -1,6 +1,6 @@
 import Menu from "../components/Menu";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { api } from "../lib/api";
 import { useEffect, useState } from "react";
 import { useUser } from "../context/UserContext";
 
@@ -62,58 +62,50 @@ export default function NovoAgendamento() {
   const [erro, setErro] = useState("");
 
   useEffect(() => {
-    async function carregarPacientes() {
-      if (!IdUser) return;
+  async function carregarPacientes() {
+    if (!IdUser) return;
 
-      const { data, error } = await supabase
-        .from("pacientes")
-        .select("id, nome_paciente, id_user")
-        .eq("id_user", IdUser)
-        .order("nome_paciente");
-
-      if (error) {
-        console.error("Erro ao carregar pacientes:", error);
-        setErro("Não foi possível carregar os pacientes.");
-        return;
-      }
-
-      setPacientes(data ?? []);
+    try {
+      const lista = await api<Paciente[]>("/pacientes");
+      setPacientes(lista);
+    } catch (e) {
+      console.error("Erro ao carregar pacientes:", e);
+      setErro("Não foi possível carregar os pacientes.");
     }
+  }
 
-    carregarPacientes();
-  }, [IdUser]);
+  carregarPacientes();
+}, [IdUser]);
 
   async function salvarAgendamento(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setErro("");
+  e.preventDefault();
+  setErro("");
 
-    if (!pacienteId || !data || !hora || !tipo) {
-      setErro("Preencha todos os campos obrigatórios.");
-      return;
-    }
-
-    setSalvando(true);
-
-    const dataHora = `${data}T${hora}:00`;
-
-    const { error } = await supabase.from("agendamentos").insert({
-      paciente_id: Number(pacienteId),
-      data_hora: dataHora,
-      tipo,
-      status: "Agendado",
-      observacao: observacao.trim(),
-    });
-
-    setSalvando(false);
-
-    if (error) {
-      console.error("Erro ao salvar agendamento:", error);
-      setErro("Não foi possível salvar. Verifique os dados e tente novamente.");
-      return;
-    }
-
-    navigate("/agenda");
+  if (!pacienteId || !data || !hora || !tipo) {
+    setErro("Preencha todos os campos obrigatórios.");
+    return;
   }
+
+  setSalvando(true);
+
+  try {
+    await api("/agendamentos", {
+      method: "POST",
+      body: JSON.stringify({
+        paciente_id: Number(pacienteId),
+        data_hora: `${data}T${hora}:00`,
+        tipo,
+        observacao: observacao.trim(),
+      }),
+    });
+    navigate("/agenda");
+  } catch (e) {
+    console.error("Erro ao salvar agendamento:", e);
+    setErro("Não foi possível salvar. Verifique os dados e tente novamente.");
+  } finally {
+    setSalvando(false);
+  }
+}
 
   const campo =
     "w-full rounded-xl border-none bg-gray-50 px-4 py-3 text-sm text-gray-800 ring-1 ring-gray-200 outline-none transition placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-primary";

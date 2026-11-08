@@ -1,13 +1,9 @@
 import Menu from "../components/Menu";
-import { createClient } from "@supabase/supabase-js";
 import { useEffect, useMemo, useState } from "react";
+import { api, agoraLocal } from "../lib/api";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
-);
 
 interface Pendencia {
   id: number;
@@ -55,41 +51,21 @@ export default function EvolucoesPendentes() {
     if (!IdUser) return;
 
     async function carregar() {
-      setCarregando(true);
-      setErro(null);
+  setCarregando(true);
+  setErro(null);
 
-      const { data, error } = await supabase
-        .from("agendamentos")
-        .select(
-          `
-          id,
-          data_hora,
-          tipo,
-          observacao,
-          evolucoes ( id ),
-          pacientes!inner ( id, nome_paciente, sobrenome_paciente, id_user )
-        `,
-        )
-        .eq("pacientes.id_user", IdUser)
-        .eq("status", "Atendido")
-        .lte("data_hora", new Date().toISOString())
-        .order("data_hora", { ascending: true });
+  try {
+    const data = await api<Pendencia[]>(
+      `/agendamentos/pendentes-evolucao?agora=${encodeURIComponent(agoraLocal())}`,
+    );
+    setPendencias(data);
+  } catch (e) {
+    console.error(e);
+    setErro("Não foi possível carregar as evoluções pendentes.");
+  }
 
-      if (error) {
-        console.error(error);
-        setErro("Não foi possível carregar as evoluções pendentes.");
-        setCarregando(false);
-        return;
-      }
-
-      // Pendente = atendimento já realizado e sem nenhuma evolução registrada
-      const semEvolucao = ((data ?? []) as unknown as Pendencia[]).filter(
-        (a) => !a.evolucoes || a.evolucoes.length === 0,
-      );
-
-      setPendencias(semEvolucao);
-      setCarregando(false);
-    }
+  setCarregando(false);
+}
 
     carregar();
   }, [IdUser]);

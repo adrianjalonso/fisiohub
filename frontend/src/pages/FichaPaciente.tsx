@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Menu from "../components/Menu";
-import { supabase } from "../lib/supabase";
+import { api } from "../lib/api";
 import { useUser } from "../context/UserContext";
 
 interface PacienteFicha {
@@ -286,41 +286,24 @@ export default function FichaPaciente() {
     if (!id || !IdUser) return;
 
     async function carregarFicha() {
-      setLoading(true);
-      setErroCarregar(null);
+  setLoading(true);
+  setErroCarregar(null);
 
-      const { data: dadosPaciente, error: erroPaciente } = await supabase
-        .from("pacientes")
-        .select(
-          "id, nome_paciente, data_nascimento, genero, email, telefone, endereco, status, idade, anamnese",
-        )
-        .eq("id", id)
-        .eq("id_user", IdUser)
-        .maybeSingle();
+  try {
+    const r = await api<{
+      paciente: PacienteFicha | null;
+      evolucoes: Evolucao[];
+    }>(`/pacientes/${id}/ficha`);
 
-      if (erroPaciente) {
-        console.error("Erro ao carregar paciente:", erroPaciente);
-        setErroCarregar("Não foi possível carregar a ficha do paciente.");
-        setLoading(false);
-        return;
-      }
+    setPaciente(r.paciente);
+    setEvolucoes(r.evolucoes);
+  } catch (e) {
+    console.error("Erro ao carregar a ficha:", e);
+    setErroCarregar("Não foi possível carregar a ficha do paciente.");
+  }
 
-      setPaciente((dadosPaciente as PacienteFicha | null) ?? null);
-
-      const { data: dadosEvolucoes, error: erroEvolucoes } = await supabase
-        .from("evolucoes")
-        .select("id, patologia, texto, created_at")
-        .eq("paciente_id", id)
-        .order("created_at", { ascending: false });
-
-      if (erroEvolucoes) {
-        console.error("Erro ao carregar evoluções:", erroEvolucoes);
-      } else {
-        setEvolucoes((dadosEvolucoes ?? []) as Evolucao[]);
-      }
-
-      setLoading(false);
-    }
+  setLoading(false);
+}
 
     carregarFicha();
   }, [id, IdUser]);
@@ -331,13 +314,11 @@ export default function FichaPaciente() {
   setExportando(true);
   setFeedback(null);
 
-  const { data: lista, error } = await supabase
-    .from("evolucoes")
-    .select("id, patologia, texto, created_at, id_agendamento")
-    .eq("paciente_id", paciente.id);
-
-  if (error) {
-    console.error("Erro ao exportar prontuário:", error);
+  let itens: EvolucaoExport[];
+  try {
+    itens = await api<EvolucaoExport[]>(`/pacientes/${paciente.id}/exportacao`);
+  } catch (e) {
+    console.error("Erro ao exportar prontuário:", e);
     setExportando(false);
     setFeedback({
       tipo: "erro",
@@ -345,47 +326,6 @@ export default function FichaPaciente() {
     });
     return;
   }
-
-  const registros = (lista ?? []) as (Evolucao & {
-    id_agendamento: number | null;
-  })[];
-
-  // Busca a data de cada atendimento vinculado às evoluções
-  const ids = registros
-    .map((r) => r.id_agendamento)
-    .filter((v): v is number => !!v);
-
-  const atendimentos = new Map<number, { data_hora: string; tipo: string | null }>();
-
-  if (ids.length > 0) {
-    const { data: ags } = await supabase
-      .from("agendamentos")
-      .select("id, data_hora, tipo")
-      .in("id", ids);
-
-    (ags ?? []).forEach((a: { id: number; data_hora: string; tipo: string | null }) =>
-      atendimentos.set(a.id, a),
-    );
-  }
-
-  const itens: EvolucaoExport[] = registros
-    .map((r) => {
-      const ag = r.id_agendamento ? atendimentos.get(r.id_agendamento) : undefined;
-      return {
-        id: r.id,
-        patologia: r.patologia,
-        texto: r.texto,
-        created_at: r.created_at,
-        data_atendimento: ag?.data_hora ?? r.created_at,
-        tipo: ag?.tipo ?? null,
-      };
-    })
-    // Ordem cronológica: do primeiro atendimento ao mais recente
-    .sort(
-      (a, b) =>
-        new Date(a.data_atendimento).getTime() -
-        new Date(b.data_atendimento).getTime(),
-    );
 
   const profissional = [nomeUser, sobrenomeUser].filter(Boolean).join(" ");
   const html = montarDocumento(paciente, itens, profissional);
@@ -454,22 +394,22 @@ export default function FichaPaciente() {
       anamnese: form.anamnese.trim() || null
     };
 
-    const { error } = await supabase
-      .from("pacientes")
-      .update(atualizacao)
-      .eq("id", paciente.id)
-      .eq("id_user", IdUser);
+    try {
+  await api(`/pacientes/${paciente.id}`, {
+    method: "PATCH",
+    body: JSON.stringify(atualizacao),
+  });
+} catch (e) {
+  console.error("Erro ao atualizar paciente:", e);
+  setSalvando(false);
+  setFeedback({
+    tipo: "erro",
+    mensagem: "Não foi possível salvar as alterações. Tente novamente.",
+  });
+  return;
+}
 
-    setSalvando(false);
-
-    if (error) {
-      console.error("Erro ao atualizar paciente:", error);
-      setFeedback({
-        tipo: "erro",
-        mensagem: "Não foi possível salvar as alterações. Tente novamente.",
-      });
-      return;
-    }
+setSalvando(false);
 
     setPaciente({ ...paciente, ...atualizacao });
     setEditando(false);

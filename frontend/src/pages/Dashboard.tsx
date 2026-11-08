@@ -1,14 +1,10 @@
 import Menu from "../components/Menu";
-import { createClient } from "@supabase/supabase-js";
+import {api} from "../lib/api";
 import { useEffect, useState, useRef } from "react";
 import type { Agendamento } from "../types/types";
 import { useUser } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
-);
 
 interface AgendamentoPendente {
   id: number;
@@ -22,10 +18,24 @@ interface AgendamentoPendente {
 interface Pacientes {
   id: number;
   nome_paciente: string | null;
-  sobrenome_paciente: string | null;
   telefone: string | null;
   email: string | null;
   agendamentos: AgendamentoPendente[];
+}
+
+interface ResumoDashboard {
+  atendimentosHoje: number;
+  atendimentosOntem: number;
+  totalPacientes: number;
+  novosPacientesSemana: number;
+  novosPacientesSemanaPassada: number;
+  agendamentosHoje: Agendamento[];
+  pendentes: Pacientes[];
+}
+
+function localNaive(d: Date) {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
 
 const MESES = [
@@ -102,35 +112,22 @@ export default function Dashboard() {
   const [evolucoesDoDia, setEvolucoesDoDia] = useState(0);
 
   useEffect(() => {
-    if (!IdUser) return;
+  if (!IdUser) return;
 
-    async function carregarDados() {
-      const inicioHoje = new Date();
-      inicioHoje.setHours(0, 0, 0, 0);
+  async function carregarDados() {
+    try {
+      const params = new URLSearchParams({
+        agora: localNaive(new Date()),
+        iniSem: inicioSemana.toISOString(),
+        fimSem: fimSemana.toISOString(),
+        iniSemPass: inicioSemanaPassada.toISOString(),
+        fimSemPass: fimSemanaPassada.toISOString(),
+      });
 
-      const fimHoje = new Date();
-      fimHoje.setHours(23, 59, 59, 999);
+      const r = await api<ResumoDashboard>(`/dashboard/resumo?${params}`);
 
-      const ontemInicio = new Date(inicioHoje);
-      ontemInicio.setDate(ontemInicio.getDate() - 1);
-
-      const ontemFim = new Date(fimHoje);
-      ontemFim.setDate(ontemFim.getDate() - 1);
-
-      const { count: hojeCount } = await supabase
-        .from("agendamentos")
-        .select("*", { count: "exact", head: true })
-        .gte("data_hora", inicioHoje.toISOString())
-        .lte("data_hora", fimHoje.toISOString());
-
-      const { count: ontemCount } = await supabase
-        .from("agendamentos")
-        .select("*", { count: "exact", head: true })
-        .gte("data_hora", ontemInicio.toISOString())
-        .lte("data_hora", ontemFim.toISOString());
-
-      const totalHoje = hojeCount || 0;
-      const totalOntem = ontemCount || 0;
+      const totalHoje = r.atendimentosHoje;
+      const totalOntem = r.atendimentosOntem;
 
       if (totalHoje > totalOntem) {
         setComparacao(`${totalHoje - totalOntem} a mais que ontem`);
@@ -143,38 +140,12 @@ export default function Dashboard() {
         setTendenciaAtendimentos("flat");
       }
 
-      const { data, error } = await supabase
-        .from("agendamentos")
-        .select("*,pacientes(nome_paciente,sobrenome_paciente)")
-        .gte("data_hora", inicioHoje.toISOString())
-        .lte("data_hora", fimHoje.toISOString())
-        .order("data_hora", { ascending: true });
+      setAtendimentosHoje(totalHoje);
+      setAgendamentosHoje(r.agendamentosHoje);
+      setTotalPacientes(r.totalPacientes);
 
-      const { count: pacientesCount, error: pacientesError } = await supabase
-        .from("pacientes")
-        .select("*", { count: "exact", head: true })
-        .eq("id_user", IdUser);
-
-      if (pacientesError) {
-        console.error(pacientesError);
-        return;
-      }
-      setTotalPacientes(pacientesCount || 0);
-
-      const { count: estaSemana } = await supabase
-        .from("pacientes")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", inicioSemana.toISOString())
-        .lte("created_at", fimSemana.toISOString());
-
-      const { count: semanaPassada } = await supabase
-        .from("pacientes")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", inicioSemanaPassada.toISOString())
-        .lte("created_at", fimSemanaPassada.toISOString());
-
-      const atual = estaSemana || 0;
-      const anterior = semanaPassada || 0;
+      const atual = r.novosPacientesSemana;
+      const anterior = r.novosPacientesSemanaPassada;
 
       if (atual > anterior) {
         setComparacaoPacientes(`+${atual - anterior} novos esta semana`);
@@ -188,49 +159,15 @@ export default function Dashboard() {
         );
       }
 
-      if (error) {
-        console.error(error);
-        return;
-      }
-      setAtendimentosHoje(totalHoje);
-      setAgendamentosHoje(data || []);
-
-      const { data: dadosLista, error: dadosError } = await supabase
-  .from("pacientes")
-  .select(
-    `
-    id,
-    nome_paciente,
-    sobrenome_paciente,
-    telefone,
-    email,
-    agendamentos!inner (
-      id,
-      data_hora,
-      status,
-      evolucoes (
-        id
-      )
-    )
-  `,
-  )
-  .eq("id_user", IdUser)
-  .eq("agendamentos.status", "Atendido")
-  .lte("agendamentos.data_hora", new Date().toISOString());
-
-if (dadosError) {
-  console.error("Erro ao buscar pacientes:", dadosError);
-} else {
-  const pendentes = ((dadosLista ?? []) as Pacientes[]).filter((p) =>
-    p.agendamentos.some((a) => a.evolucoes.length === 0),
-  );
-  setListaPacientes(pendentes);
-  setEvolucoesDoDia(pendentes.length);
-}
+      setListaPacientes(r.pendentes);
+      setEvolucoesDoDia(r.pendentes.length);
+    } catch (e) {
+      console.error("Erro ao carregar o painel:", e);
     }
+  }
 
-    carregarDados();
-  }, [IdUser]);
+  carregarDados();
+}, [IdUser]);
 
   // Índice do próximo atendimento de hoje (primeiro que ainda não passou)
   const agora = new Date();
@@ -256,7 +193,7 @@ if (dadosError) {
 
 const [busca, setBusca] = useState("");
 const [resultados, setResultados] = useState<
-  { id: number; nome_paciente: string | null; sobrenome_paciente: string | null }[]
+  { id: number; nome_paciente: string | null }[]
 >([]);
 const [buscando, setBuscando] = useState(false);
 const [abrirResultados, setAbrirResultados] = useState(false);
@@ -275,30 +212,17 @@ useEffect(() => {
   setBuscando(true);
 
   const timer = setTimeout(async () => {
-    let query = supabase
-      .from("pacientes")
-      .select("id, nome_paciente, sobrenome_paciente")
-      .eq("id_user", IdUser);
-
-    // Cada palabra debe coincidir con nombre o apellido ("maria silva" funciona)
-    termo
-      .split(/\s+/)
-      .map((t) => t.replace(/[%,()]/g, ""))
-      .filter(Boolean)
-      .forEach((t) => {
-        query = query.or(
-          `nome_paciente.ilike.%${t}%,sobrenome_paciente.ilike.%${t}%`,
-        );
-      });
-
-    const { data, error } = await query
-      .order("nome_paciente", { ascending: true })
-      .limit(8);
-
-    if (error) console.error(error);
-    setResultados(data ?? []);
-    setBuscando(false);
-  }, 300);
+  try {
+    const data = await api<
+      { id: number; nome_paciente: string | null }[]
+    >(`/pacientes?busca=${encodeURIComponent(termo)}`);
+    setResultados(data);
+  } catch (e) {
+    console.error(e);
+    setResultados([]);
+  }
+  setBuscando(false);
+}, 300);
 
   return () => clearTimeout(timer);
 }, [busca, IdUser]);
@@ -388,10 +312,10 @@ function completarNota(paciente: Pacientes, agendamento: AgendamentoPendente) {
                 className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-primary/5 focus:bg-primary/5 focus:outline-none"
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
-                  {iniciais(p.nome_paciente, p.sobrenome_paciente)}
+                  {iniciais(p.nome_paciente)}
                 </div>
                 <span className="truncate text-sm font-medium">
-                  {[p.nome_paciente, p.sobrenome_paciente]
+                  {[p.nome_paciente]
                     .filter(Boolean)
                     .join(" ")}
                 </span>
@@ -644,14 +568,12 @@ function completarNota(paciente: Pacientes, agendamento: AgendamentoPendente) {
                         <div className="flex min-w-0 items-center gap-3">
                           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-white">
                             {iniciais(
-                              paciente.nome_paciente,
-                              paciente.sobrenome_paciente,
+                              paciente.nome_paciente
                             )}
                           </div>
                           <p className="truncate font-medium">
                             {[
                               paciente.nome_paciente,
-                              paciente.sobrenome_paciente,
                             ]
                               .filter(Boolean)
                               .join(" ")}

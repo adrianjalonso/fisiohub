@@ -1,6 +1,6 @@
 import Menu from "../components/Menu";
 import { Link } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { api } from "../lib/api";
 import { useEffect, useState } from "react";
 import { useUser } from "../context/UserContext";
 
@@ -73,20 +73,13 @@ export default function Agenda() {
     .sort((a, b) => a.data_hora.localeCompare(b.data_hora));
 
   useEffect(() => {
-    async function carregarAgenda() {
-      const { data, error } = await supabase
-        .from("agendamentos")
-        .select(
-          `id,paciente_id,data_hora,tipo,status,observacao,pacientes!inner(id,nome_paciente,id_user)`,
-        )
-        .eq("pacientes.id_user", IdUser);
+  if (!IdUser) return;
 
-      if (error) {
-        console.log(error);
-        return;
-      }
+  async function carregarAgenda() {
+    try {
+      const data = await api<any[]>("/agendamentos");
 
-      const dadosFormatados = data.map((item: any) => ({
+      const dadosFormatados = data.map((item) => ({
         ...item,
         pacientes: Array.isArray(item.pacientes)
           ? item.pacientes[0]
@@ -94,10 +87,13 @@ export default function Agenda() {
       }));
 
       setAgendamentos(dadosFormatados);
+    } catch (e) {
+      console.error("Erro ao carregar a agenda:", e);
     }
+  }
 
-    carregarAgenda();
-  }, [IdUser]);
+  carregarAgenda();
+}, [IdUser]);
 
   function mudarDia(delta: number) {
     const novaData = new Date(dataSelecionada);
