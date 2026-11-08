@@ -1,13 +1,22 @@
-import { Response,Request } from "express"
-import {registerService} from "../services/auth.services.js"
+import { Response, Request } from "express"
+import { registerService, loginService } from "../services/auth.services.js"
 
-async function register(req: Request, res: Response) {
-  const {nome,email,password,titulo,crefito} = req.body
-
-  const result = await registerService(nome,email,password,titulo,crefito)
-
-  res.status(201).json(result)
+export async function register(req: Request, res: Response) {
+  try {
+    const { nome, email, password, titulo, crefito } = req.body
+    const result = await registerService(nome, email, password, titulo, crefito)
+    res.status(201).json(result)
+  } catch (e: any) {
+    res.status(400).json({ error: e.message })
+  }
 }
 
-
-export default register
+export async function login(req: Request, res: Response) {
+  try {
+    const { email, password } = req.body
+    const result = await loginService(email, password)
+    res.json(result)
+  } catch (e: any) {
+    res.status(401).json({ error: e.message })
+  }
+}

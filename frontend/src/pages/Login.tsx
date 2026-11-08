@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
 
 type LoginProps = {
   setTitulo: React.Dispatch<React.SetStateAction<string>>;
@@ -24,38 +23,44 @@ export default function Login({
   const [erro, setErro] = useState("");
 
   async function verificar(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (entrando) return;
+  e.preventDefault();
+  if (entrando) return;
 
-    setErro("");
-    setEntrando(true);
+  setErro("");
+  setEntrando(true);
 
-    const { data, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("user_email", email.trim())
-      .single();
+  try {
+    const resp = await fetch("http://localhost:3000/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim(), password: senha }),
+    });
 
-    setEntrando(false);
+    const result = await resp.json();
 
-    if (data) {
-      setTitulo(`${data.titulo} `);
-      localStorage.setItem("titulo", data.titulo);
-      setNome(`${data.user_nome}`);
-      localStorage.setItem("nome",data.user_nome)
-      setSobrenome(data.user_sobrenome);
-      localStorage.setItem("sobrenome", data.user_sobrenome);
-      setIdUser(data.user_id);
-      localStorage.setItem("IdUser", String(data.user_id));
-      navigate("/dashboard");
-    } else {
-      console.log("supabase error", error);
-      console.log("supabase data", data);
-      setErro(
-        "E-mail não encontrado. Confira o endereço ou crie uma conta.",
-      );
+    if (!resp.ok) {
+      setErro("E-mail ou senha inválidos.");
+      return;
     }
+
+    const data = result.user;
+    localStorage.setItem("token", result.token);
+
+    setTitulo(`${data.titulo} `);
+    localStorage.setItem("titulo", data.titulo);
+    setNome(`${data.user_nome}`);
+    localStorage.setItem("nome", data.user_nome);
+    setSobrenome(data.user_sobrenome);
+    localStorage.setItem("sobrenome", data.user_sobrenome);
+    setIdUser(data.user_id);
+    localStorage.setItem("IdUser", String(data.user_id));
+    navigate("/dashboard");
+  } catch {
+    setErro("Não foi possível conectar ao servidor. Tente novamente.");
+  } finally {
+    setEntrando(false);
   }
+}
 
   const campo =
     "h-12 w-full rounded-xl border border-gray-200 bg-white pl-11 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/30";

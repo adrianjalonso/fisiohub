@@ -7,7 +7,6 @@ import { useUser } from "../context/UserContext";
 interface Paciente {
   id: number;
   nome_paciente: string;
-  sobrenome_paciente: string;
   id_user: number;
 }
 
@@ -68,7 +67,7 @@ export default function NovoAgendamento() {
 
       const { data, error } = await supabase
         .from("pacientes")
-        .select("id, nome_paciente, sobrenome_paciente, id_user")
+        .select("id, nome_paciente, id_user")
         .eq("id_user", IdUser)
         .order("nome_paciente");
 
@@ -212,7 +211,7 @@ export default function NovoAgendamento() {
 
                       {pacientes.map((paciente) => (
                         <option key={paciente.id} value={paciente.id}>
-                          {paciente.nome_paciente} {paciente.sobrenome_paciente}
+                          {paciente.nome_paciente}
                         </option>
                       ))}
                     </select>

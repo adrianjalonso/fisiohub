@@ -50,7 +50,7 @@ function iniciais(nome?: string | null, sobrenome?: string | null) {
 }
 
 export default function Dashboard() {
-  const { titulo, sobrenome, IdUser } = useUser();
+  const { titulo, nome, IdUser } = useUser();
 
   const hoje = new Date();
   const dia = hoje.getDate();
@@ -411,7 +411,7 @@ function completarNota(paciente: Pacientes, agendamento: AgendamentoPendente) {
           {/* Saudação */}
           <div className="flex flex-col gap-1">
             <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-              {saudacao}, {titulo} {sobrenome}
+              {saudacao}, {titulo} {nome}
             </h2>
             <p className="text-gray-600">{resumoDia}</p>
           </div>
