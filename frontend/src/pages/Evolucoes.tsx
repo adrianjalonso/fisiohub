@@ -27,12 +27,7 @@ function normalizarTexto(texto: string) {
     .toLocaleLowerCase();
 }
 
-function iniciais(nome?: string | null) {
-  const partes = (nome ?? "").trim().split(/\s+/).filter(Boolean);
-  if (partes.length === 0) return "?";
-  if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
-  return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
-}
+
 
 export default function Evolucoes() {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
@@ -204,9 +199,11 @@ export default function Evolucoes() {
                     >
                       {/* Paciente */}
                       <div className="flex items-center gap-4 md:w-1/3">
-                        <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-white">
-                          {iniciais(paciente.nome_paciente)}
-                        </div>
+                        <img
+                                className="size-11 rounded-full bg-gray-100 object-cover ring-2 ring-white"
+                                src={`https://api.dicebear.com/10.x/personas/svg?seed=${paciente.id}`}
+                                alt=""
+                              />
                         <div className="min-w-0">
                           <h3 className="truncate text-lg font-bold leading-tight">
                             {paciente.nome_paciente}
