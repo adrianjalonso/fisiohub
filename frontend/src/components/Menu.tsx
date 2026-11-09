@@ -15,7 +15,7 @@ const estiloDestacado = `${estiloBase} bg-primary/15 font-semibold text-primary-
 const estiloNormal = `${estiloBase} font-medium text-gray-600 hover:bg-primary/10 hover:text-primary-dark`;
 
 export default function Menu() {
-  const { titulo, sobrenome, IdUser } = useUser();
+  const { titulo, nome, IdUser } = useUser();
 
   return (
     <>
@@ -78,7 +78,7 @@ export default function Menu() {
             />
             <div className="flex min-w-0 flex-1 flex-col leading-tight">
               <p className="truncate text-sm font-bold text-black">
-                {titulo} {sobrenome}
+                {titulo} {nome}
               </p>
               <p className="truncate text-xs font-medium text-gray-500">
                 Fisioterapeuta

@@ -1,4 +1,6 @@
-const API = import.meta.env.VITE_API_URL ?? "http://localhost:3000"
+export const API_URL = (
+  import.meta.env.VITE_API_URL ?? "http://localhost:3000"
+).replace(/\/+$/, "")
 
 export async function api<T = any>(
   caminho: string,
@@ -6,7 +8,7 @@ export async function api<T = any>(
 ): Promise<T> {
   const token = localStorage.getItem("token")
 
-  const resp = await fetch(`${API}${caminho}`, {
+  const resp = await fetch(`${API_URL}${caminho}`, {
     ...opcoes,
     headers: {
       "Content-Type": "application/json",
