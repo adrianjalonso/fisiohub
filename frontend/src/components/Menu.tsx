@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useUser } from "../context/UserContext";
+import { primeiroNome } from "../lib/nome";
 
 const itens = [
   { to: "/dashboard", icone: "dashboard", rotulo: "Painel" },
@@ -78,7 +79,7 @@ export default function Menu() {
             />
             <div className="flex min-w-0 flex-1 flex-col leading-tight">
               <p className="truncate text-sm font-bold text-black">
-                {titulo} {nome}
+                {titulo} {primeiroNome(nome)}
               </p>
               <p className="truncate text-xs font-medium text-gray-500">
                 Fisioterapeuta

@@ -3,6 +3,7 @@ import {api} from "../lib/api";
 import { useEffect, useState, useRef } from "react";
 import type { Agendamento } from "../types/types";
 import { useUser } from "../context/UserContext";
+import { primeiroNome } from "../lib/nome";
 import { useNavigate } from "react-router-dom";
 
 
@@ -311,9 +312,11 @@ function completarNota(paciente: Pacientes, agendamento: AgendamentoPendente) {
                 onClick={() => abrirFicha(p.id)}
                 className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-primary/5 focus:bg-primary/5 focus:outline-none"
               >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
-                  {iniciais(p.nome_paciente)}
-                </div>
+                 <img
+                                className="size-11 rounded-full bg-gray-100 object-cover ring-2 ring-white"
+                                src={`https://api.dicebear.com/10.x/personas/svg?seed=${p.id}`}
+                                alt=""
+                              />
                 <span className="truncate text-sm font-medium">
                   {[p.nome_paciente]
                     .filter(Boolean)
@@ -335,7 +338,7 @@ function completarNota(paciente: Pacientes, agendamento: AgendamentoPendente) {
           {/* Saudação */}
           <div className="flex flex-col gap-1">
             <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-              {saudacao}, {titulo} {nome}
+              {saudacao}, {titulo} {primeiroNome(nome)}
             </h2>
             <p className="text-gray-600">{resumoDia}</p>
           </div>
