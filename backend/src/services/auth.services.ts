@@ -50,6 +50,77 @@ export async function registerService(
   return userSeguro
 }
 
+export async function buscarPerfilService(userId: number) {
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  if (!data) {
+    throw new Error("Usuário não encontrado")
+  }
+
+  const { senha, ...userSeguro } = data
+  return userSeguro
+}
+
+export async function atualizarPerfilService(
+  userId: number,
+  dados: { nome: string; titulo: string; email: string; crefito: string }
+) {
+  const nome = String(dados.nome ?? "").trim()
+  const email = String(dados.email ?? "").trim()
+  const titulo = String(dados.titulo ?? "").trim()
+  const crefito = String(dados.crefito ?? "").trim()
+
+  if (!nome || !email) {
+    throw new Error("Nome e e-mail são obrigatórios")
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error("E-mail inválido")
+  }
+
+  const { data: existente, error: erroBusca } = await supabase
+    .from("users")
+    .select("user_id")
+    .eq("user_email", email)
+    .neq("user_id", userId)
+    .maybeSingle()
+
+  if (erroBusca) {
+    throw new Error(erroBusca.message)
+  }
+
+  if (existente) {
+    throw new Error("Este e-mail já está em uso")
+  }
+
+  const { data, error } = await supabase
+    .from("users")
+    .update({
+      user_nome: nome,
+      user_email: email,
+      titulo: titulo,
+      crefito: crefito,
+    })
+    .eq("user_id", userId)
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  const { senha, ...userSeguro } = data
+  return userSeguro
+}
+
 export async function loginService(email: string, password: string) {
   if (!email || !password) {
     throw new Error("E-mail e senha são obrigatórios")

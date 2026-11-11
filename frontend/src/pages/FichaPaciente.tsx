@@ -268,7 +268,7 @@ function imprimirHtml(html: string, tituloArquivo: string) {
 export default function FichaPaciente() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { IdUser, nome: nomeUser, sobrenome: sobrenomeUser } = useUser();
+  const { IdUser, nome: nomeUser, titulo } = useUser();
 
   const [paciente, setPaciente] = useState<PacienteFicha | null>(null);
   const [evolucoes, setEvolucoes] = useState<Evolucao[]>([]);
@@ -327,7 +327,7 @@ export default function FichaPaciente() {
     return;
   }
 
-  const profissional = [nomeUser, sobrenomeUser].filter(Boolean).join(" ");
+  const profissional = [titulo, nomeUser].filter(Boolean).join(" ");
   const html = montarDocumento(paciente, itens, profissional);
   const nomeArquivo = `Prontuário - ${nomeCompleto || "Paciente"}`;
 

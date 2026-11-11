@@ -4,14 +4,14 @@ import api from "../api/api";
 
 type LoginProps = {
   setTitulo: React.Dispatch<React.SetStateAction<string>>;
-  setSobrenome: React.Dispatch<React.SetStateAction<string>>;
+  setEmailUsuario: React.Dispatch<React.SetStateAction<string>>;
   setNome: React.Dispatch<React.SetStateAction<string>>;
   setIdUser: React.Dispatch<React.SetStateAction<number>>;
 };
 
 export default function Login({
   setTitulo,
-  setSobrenome,
+  setEmailUsuario,
   setIdUser,
   setNome,
 }: LoginProps) {
@@ -47,12 +47,12 @@ export default function Login({
     const data = result.user;
     localStorage.setItem("token", result.token);
 
-    setTitulo(`${data.titulo} `);
-    localStorage.setItem("titulo", data.titulo);
-    setNome(`${data.user_nome}`);
-    localStorage.setItem("nome", data.user_nome);
-    setSobrenome(data.user_sobrenome);
-    localStorage.setItem("sobrenome", data.user_sobrenome);
+    setTitulo(data.titulo ?? "");
+    localStorage.setItem("titulo", data.titulo ?? "");
+    setNome(data.user_nome ?? "");
+    localStorage.setItem("nome", data.user_nome ?? "");
+    setEmailUsuario(data.user_email ?? "");
+    localStorage.setItem("email", data.user_email ?? "");
     setIdUser(data.user_id);
     localStorage.setItem("IdUser", String(data.user_id));
     navigate("/dashboard");

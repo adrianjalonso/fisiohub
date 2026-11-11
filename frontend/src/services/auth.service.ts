@@ -1,4 +1,20 @@
 import api from "../api/api";
+import { api as request } from "../lib/api";
+
+export type Perfil = {
+  user_id: number;
+  user_nome: string;
+  user_email: string;
+  titulo: string | null;
+  crefito: string | null;
+};
+
+export type DadosPerfil = {
+  nome: string;
+  titulo: string;
+  email: string;
+  crefito: string;
+};
 
 export async function register(userData:{
   nome: string,
@@ -20,4 +36,15 @@ export async function register(userData:{
   }
 
   return data;
+}
+
+export function getProfile() {
+  return request<Perfil>("/auth/perfil");
+}
+
+export function updateProfile(userData: DadosPerfil) {
+  return request<Perfil>("/auth/perfil", {
+    method: "PATCH",
+    body: JSON.stringify(userData),
+  });
 }

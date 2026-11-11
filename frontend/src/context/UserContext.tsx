@@ -1,11 +1,17 @@
 import { createContext, useContext, type ReactNode } from "react";
 
+export type DadosUsuario = {
+  nome: string;
+  email: string;
+  titulo: string;
+};
 
 interface UserContextType {
-  titulo: string,
-  sobrenome: string,
-  IdUser: number,
-  nome: string
+  titulo: string;
+  IdUser: number;
+  nome: string;
+  email: string;
+  atualizarUsuario: (dados: DadosUsuario) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(
@@ -13,16 +19,24 @@ const UserContext = createContext<UserContextType | undefined>(
 );
 
 interface UserProviderProps {
-  children: ReactNode,
-  titulo: string,
-  sobrenome: string,
-  IdUser: number,
-  nome: string
+  children: ReactNode;
+  titulo: string;
+  IdUser: number;
+  nome: string;
+  email: string;
+  atualizarUsuario: (dados: DadosUsuario) => void;
 }
 
-export function UserProvider({ children,titulo,nome,sobrenome,IdUser }: UserProviderProps) {
+export function UserProvider({
+  children,
+  titulo,
+  nome,
+  IdUser,
+  email,
+  atualizarUsuario,
+}: UserProviderProps) {
   return(
-    <UserContext.Provider value={{titulo,nome,sobrenome,IdUser}}>
+    <UserContext.Provider value={{ titulo, nome, IdUser, email, atualizarUsuario }}>
       {children}
     </UserContext.Provider>
   )

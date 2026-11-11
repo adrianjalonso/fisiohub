@@ -1,12 +1,12 @@
 import { Route, Routes } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Pacientes from "./pages/Pacientes";
 import Registro from "./pages/Registro";
 import FichaPaciente from "./pages/FichaPaciente";
 import Cadastro from "./pages/Cadastro";
-import { UserProvider } from "./context/UserContext";
+import { UserProvider, type DadosUsuario } from "./context/UserContext";
 import Agenda from "./pages/Agenda";
 import Settings from "./pages/Settings";
 import Evolucoes from "./pages/Evolucoes";
@@ -16,28 +16,37 @@ import EvolucoesPendentes from "./pages/EvolucoesPendentes";
 
 
 export default function App() {
-  const [titulo, setTitulo] = useState("");
-  const [sobrenome, setSobrenome] = useState("");
-  const [nome, setNome] = useState("");
+  const [titulo, setTitulo] = useState(
+    () => localStorage.getItem("titulo") ?? ""
+  );
+  const [nome, setNome] = useState(
+    () => localStorage.getItem("nome") ?? ""
+  );
+  const [email, setEmail] = useState(
+    () => localStorage.getItem("email") ?? ""
+  );
   const [IdUser, setIdUser] = useState(() => {
     const id = localStorage.getItem("IdUser");
     return id ? Number(id) : 0;
   });
 
-  useEffect(() => {
-    const titulo = localStorage.getItem("titulo");
-    const sobrenome = localStorage.getItem("sobrenome");
-    const idUser = localStorage.getItem("IdUser");
-    const nome = localStorage.getItem("nome")
-
-    if (titulo) setTitulo(titulo);
-    if (sobrenome) setSobrenome(sobrenome);
-    if (idUser) setIdUser(Number(idUser));
-    if (nome) setNome(nome);
+  const atualizarUsuario = useCallback((dados: DadosUsuario) => {
+    setNome(dados.nome);
+    setEmail(dados.email);
+    setTitulo(dados.titulo);
+    localStorage.setItem("nome", dados.nome);
+    localStorage.setItem("email", dados.email);
+    localStorage.setItem("titulo", dados.titulo);
   }, []);
 
   return (
-    <UserProvider titulo={titulo} sobrenome={sobrenome} IdUser={IdUser} nome={nome}>
+    <UserProvider
+      titulo={titulo}
+      IdUser={IdUser}
+      nome={nome}
+      email={email}
+      atualizarUsuario={atualizarUsuario}
+    >
       <div className="min-h-dvh w-full">
       <Routes>
         <Route
@@ -45,9 +54,9 @@ export default function App() {
           element={
             <Login
               setTitulo={setTitulo}
-              setSobrenome={setSobrenome}
               setIdUser={setIdUser}
               setNome={setNome}
+              setEmailUsuario={setEmail}
             />
           }
         />
@@ -56,9 +65,9 @@ export default function App() {
           element={
             <Login
               setTitulo={setTitulo}
-              setSobrenome={setSobrenome}
               setIdUser={setIdUser}
               setNome={setNome}
+              setEmailUsuario={setEmail}
             />
           }
         />
