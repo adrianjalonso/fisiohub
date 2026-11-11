@@ -159,9 +159,9 @@ export default function Cadastro() {
                   }`}
                 >
                   <option value="">Selecione</option>
-                  <option value="M">Dr.</option>
-                  <option value="F">Dra.</option>
-                  <option value="-">Nenhum</option>
+                  <option value="Dr.">Dr.</option>
+                  <option value="Dra.">Dra.</option>
+                  <option value="">Nenhum</option>
                 </select>
                 <span className="material-symbols-outlined pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400">
                   expand_more
