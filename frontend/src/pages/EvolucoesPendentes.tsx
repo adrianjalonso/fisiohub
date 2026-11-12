@@ -14,17 +14,11 @@ interface Pendencia {
   pacientes: {
     id: number;
     nome_paciente: string | null;
-    sobrenome_paciente: string | null;
   } | null;
 }
 
 type Ordem = "recentes" | "antigas";
 
-function iniciais(nome?: string | null, sobrenome?: string | null) {
-  const a = nome?.trim()?.[0] ?? "";
-  const b = sobrenome?.trim()?.[0] ?? nome?.trim()?.[1] ?? "";
-  return (a + b).toUpperCase() || "?";
-}
 
 function diasDesde(dataIso: string) {
   const ms = Date.now() - new Date(dataIso).getTime();
@@ -75,7 +69,7 @@ export default function EvolucoesPendentes() {
 
     const filtradas = pendencias.filter((p) => {
       if (!termo) return true;
-      const nome = [p.pacientes?.nome_paciente, p.pacientes?.sobrenome_paciente]
+      const nome = [p.pacientes?.nome_paciente]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -255,8 +249,7 @@ export default function EvolucoesPendentes() {
                   const dias = diasDesde(p.data_hora);
                   const urgente = dias >= 7;
                   const nome = [
-                    p.pacientes?.nome_paciente,
-                    p.pacientes?.sobrenome_paciente,
+                    p.pacientes?.nome_paciente
                   ]
                     .filter(Boolean)
                     .join(" ");
@@ -271,10 +264,7 @@ export default function EvolucoesPendentes() {
                     >
                       <div className="flex min-w-0 items-center gap-4">
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-white">
-                          {iniciais(
-                            p.pacientes?.nome_paciente,
-                            p.pacientes?.sobrenome_paciente,
-                          )}
+                         
                         </div>
                         <div className="flex min-w-0 flex-col">
                           <div className="flex flex-wrap items-center gap-2">

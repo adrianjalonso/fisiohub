@@ -35,7 +35,7 @@ router.get("/pendentes-evolucao", async (req, res) => {
     .from("agendamentos")
     .select(
       `id, data_hora, tipo, observacao, evolucoes ( id ),
-       pacientes!inner ( id, nome_paciente, sobrenome_paciente, id_user )`
+       pacientes!inner ( id, nome_paciente, id_user )`
     )
     .eq("pacientes.id_user", userId)
     .eq("status", "Atendido")
