@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import type { Agendamento } from "../types/types";
 import { useUser } from "../context/UserContext";
 import { primeiroNome } from "../lib/nome";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 
 interface AgendamentoPendente {
@@ -32,6 +32,7 @@ interface ResumoDashboard {
   novosPacientesSemanaPassada: number;
   agendamentosHoje: Agendamento[];
   pendentes: Pacientes[];
+  totalPendentes: number;
 }
 
 function localNaive(d: Date) {
@@ -161,7 +162,7 @@ export default function Dashboard() {
       }
 
       setListaPacientes(r.pendentes);
-      setEvolucoesDoDia(r.pendentes.length);
+      setEvolucoesDoDia(r.totalPendentes);
     } catch (e) {
       console.error("Erro ao carregar o painel:", e);
     }
@@ -434,10 +435,10 @@ function completarNota(paciente: Pacientes, agendamento: AgendamentoPendente) {
                         }`}
                   </p>
                 </div>
-                <button className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2">
+                <Link to={"/novoagendamento"} className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2">
                   <span className="material-symbols-outlined text-lg">add</span>
-                  Novo atendimento
-                </button>
+                  Novo agendamento
+                </Link>
               </div>
 
               {agendamentosHoje.length === 0 ? (
@@ -567,7 +568,7 @@ function completarNota(paciente: Pacientes, agendamento: AgendamentoPendente) {
                       key={paciente.id}
                       className="flex flex-col gap-3 rounded-xl border border-amber-100 bg-amber-50/50 p-4 transition hover:border-amber-200"
                     >
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
                         <div className="flex min-w-0 items-center gap-3">
                           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-white">
                             {iniciais(
@@ -582,18 +583,6 @@ function completarNota(paciente: Pacientes, agendamento: AgendamentoPendente) {
                               .join(" ")}
                           </p>
                         </div>
-                        <p className="shrink-0 text-xs text-gray-500">
-                          {paciente.agendamentos?.[0]?.data_hora
-                            ? new Date(
-                                paciente.agendamentos[0].data_hora,
-                              ).toLocaleString("pt-BR", {
-                                day: "2-digit",
-                                month: "short",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })
-                            : "Data indisponível"}
-                        </p>
                       </div>
                       <div className="flex items-center justify-between">
                        <p className="shrink-0 text-xs text-gray-500">

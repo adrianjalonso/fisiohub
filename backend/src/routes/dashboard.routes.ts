@@ -84,7 +84,6 @@ router.get("/resumo", async (req, res) => {
            agendamentos!inner ( id, data_hora, status, evolucoes ( id ) )`
         )
         .eq("id_user", userId)
-        .eq("agendamentos.status", "Atendido")
         .lte("agendamentos.data_hora", agora),
     ])
 
@@ -92,8 +91,20 @@ router.get("/resumo", async (req, res) => {
     if (agendaRes.error) throw new Error(agendaRes.error.message)
     if (pendentesRes.error) throw new Error(pendentesRes.error.message)
 
-    const pendentes = ((pendentesRes.data ?? []) as any[]).filter((p) =>
-      p.agendamentos.some((a: any) => a.evolucoes.length === 0)
+    // Considera concluído todo atendimento cujo horário já passou,
+    // exceto os cancelados e os que já têm evolução registrada.
+    const pendentes = ((pendentesRes.data ?? []) as any[])
+      .map((p) => ({
+        ...p,
+        agendamentos: (p.agendamentos ?? []).filter(
+          (a: any) => a.status !== "Cancelado" && a.evolucoes.length === 0
+        ),
+      }))
+      .filter((p) => p.agendamentos.length > 0)
+
+    const totalPendentes = pendentes.reduce(
+      (total, p) => total + p.agendamentos.length,
+      0
     )
 
     res.json({
@@ -104,6 +115,7 @@ router.get("/resumo", async (req, res) => {
       novosPacientesSemanaPassada,
       agendamentosHoje: agendaRes.data ?? [],
       pendentes,
+      totalPendentes,
     })
   } catch (e: any) {
     res.status(500).json({ error: e.message })

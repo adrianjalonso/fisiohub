@@ -34,18 +34,21 @@ router.get("/pendentes-evolucao", async (req, res) => {
   const { data, error } = await supabase
     .from("agendamentos")
     .select(
-      `id, data_hora, tipo, observacao, evolucoes ( id ),
+      `id, data_hora, tipo, status, observacao, evolucoes ( id ),
        pacientes!inner ( id, nome_paciente, id_user )`
     )
     .eq("pacientes.id_user", userId)
-    .eq("status", "Atendido")
     .lte("data_hora", agora)
     .order("data_hora", { ascending: true })
 
   if (error) return res.status(500).json({ error: error.message })
 
+  // Considera concluído todo atendimento cujo horário já passou,
+  // exceto os cancelados e os que já têm evolução registrada.
   const pendentes = (data ?? []).filter(
-    (a: any) => !a.evolucoes || a.evolucoes.length === 0
+    (a: any) =>
+      a.status !== "Cancelado" &&
+      (!a.evolucoes || a.evolucoes.length === 0)
   )
   res.json(pendentes)
 })
@@ -75,7 +78,7 @@ router.get("/sem-evolucao", async (req, res) => {
 
   const { data, error } = await supabase
     .from("agendamentos")
-    .select("id, data_hora, tipo, evolucoes(id)")
+    .select("id, data_hora, tipo, status, evolucoes(id)")
     .eq("paciente_id", paciente.id)
     .lte("data_hora", agora)
     .order("data_hora", { ascending: false })
@@ -83,7 +86,9 @@ router.get("/sem-evolucao", async (req, res) => {
   if (error) return res.status(500).json({ error: error.message })
 
   const semEvolucao = (data ?? []).filter(
-    (a: any) => !a.evolucoes || a.evolucoes.length === 0
+    (a: any) =>
+      a.status !== "Cancelado" &&
+      (!a.evolucoes || a.evolucoes.length === 0)
   )
   res.json(semEvolucao)
 })

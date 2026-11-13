@@ -264,7 +264,11 @@ export default function EvolucoesPendentes() {
                     >
                       <div className="flex min-w-0 items-center gap-4">
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-white">
-                         
+                         <img
+                                className="size-11 rounded-full bg-gray-100 object-cover ring-2 ring-white"
+                                src={`https://api.dicebear.com/10.x/personas/svg?seed=${p.id}`}
+                                alt=""
+                              />
                         </div>
                         <div className="flex min-w-0 flex-col">
                           <div className="flex flex-wrap items-center gap-2">
