@@ -55,11 +55,6 @@ const MESES = [
   "Dezembro",
 ];
 
-function iniciais(nome?: string | null, sobrenome?: string | null) {
-  const a = nome?.trim()?.[0] ?? "";
-  const b = sobrenome?.trim()?.[0] ?? nome?.trim()?.[1] ?? "";
-  return (a + b).toUpperCase() || "?";
-}
 
 export default function Dashboard() {
   const { titulo, nome, IdUser } = useUser();
